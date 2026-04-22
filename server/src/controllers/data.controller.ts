@@ -1,0 +1,278 @@
+import { FastifyReply, FastifyRequest } from 'fastify';
+import path from 'path';
+import fs from 'fs/promises';
+import { prisma } from '../config/database';
+import { config } from '../config/app';
+
+export const uploadData = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const userId = (request.user as any).userId;
+    const data = await request.file();
+
+    if (!data) {
+      return reply.code(400).send({
+        success: false,
+        error: {
+          code: 'FILE_REQUIRED',
+          message: '请上传文件'
+        }
+      });
+    }
+
+    if (!data.filename.endsWith('.gga')) {
+      return reply.code(400).send({
+        success: false,
+        error: {
+          code: 'FILE_INVALID_TYPE',
+          message: '只支持.gga格式的文件'
+        }
+      });
+    }
+
+    const dateStr = (request.body as any)?.date || new Date().toISOString().split('T')[0];
+    const deviceId = (request.body as any)?.deviceId;
+    const deviceModel = (request.body as any)?.deviceModel;
+
+    const dateDir = path.join(config.upload.dir, userId.toString(), dateStr);
+    await fs.mkdir(dateDir, { recursive: true });
+
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substring(2, 8);
+    const fileName = `${timestamp}_${randomId}.gga`;
+    const filePath = path.join(dateDir, fileName);
+
+    const fileBuffer = await data.toBuffer();
+    await fs.writeFile(filePath, fileBuffer);
+
+    const recordCount = fileBuffer.toString().split('\n').filter(line => line.includes('$GPGGA') || line.includes('$GNGGA')).length;
+
+    const dataset = await prisma.dataset.create({
+      data: {
+        userId,
+        fileName: data.filename,
+        filePath,
+        fileSize: fileBuffer.length,
+        date: new Date(dateStr),
+        recordCount,
+        deviceId,
+        deviceModel,
+        uploadStatus: 'completed'
+      }
+    });
+
+    return reply.code(201).send({
+      success: true,
+      data: {
+        datasetId: dataset.id,
+        fileName: data.filename,
+        fileSize: fileBuffer.length,
+        recordCount,
+        uploadTime: dataset.createdAt
+      }
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getDatasets = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const userId = (request.user as any).userId;
+    const query = request.query as any;
+
+    const page = parseInt(query.page || '1', 10);
+    const limit = parseInt(query.limit || '20', 10);
+    const skip = (page - 1) * limit;
+
+    const where: any = { userId };
+
+    if (query.startDate || query.endDate) {
+      where.date = {};
+      if (query.startDate) where.date.gte = new Date(query.startDate);
+      if (query.endDate) where.date.lte = new Date(query.endDate);
+    }
+
+    const sortField = query.sort === 'date' ? 'date' : 'createdAt';
+    const sortOrder = query.order === 'asc' ? 'asc' : 'desc';
+
+    const [datasets, total] = await Promise.all([
+      prisma.dataset.findMany({
+        where,
+        orderBy: { [sortField]: sortOrder },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          fileName: true,
+          fileSize: true,
+          date: true,
+          recordCount: true,
+          createdAt: true
+        }
+      }),
+      prisma.dataset.count({ where })
+    ]);
+
+    return reply.send({
+      success: true,
+      data: {
+        datasets: datasets.map(d => ({
+          id: d.id,
+          fileName: d.fileName,
+          fileSize: d.fileSize,
+          date: d.date,
+          recordCount: d.recordCount,
+          uploadTime: d.createdAt
+        })),
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      }
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getDatasetDetail = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const userId = (request.user as any).userId;
+    const { id } = request.params as { id: string };
+
+    const dataset = await prisma.dataset.findFirst({
+      where: { id, userId }
+    });
+
+    if (!dataset) {
+      return reply.code(404).send({
+        success: false,
+        error: {
+          code: 'DATASET_NOT_FOUND',
+          message: '数据集不存在'
+        }
+      });
+    }
+
+    let preview = '';
+    try {
+      const content = await fs.readFile(dataset.filePath, 'utf-8');
+      const lines = content.split('\n').filter(line => line.includes('$GPGGA') || line.includes('$GNGGA'));
+      preview = lines.slice(0, 10).join('\n');
+    } catch (err) {
+      preview = '无法读取文件内容';
+    }
+
+    return reply.send({
+      success: true,
+      data: {
+        id: dataset.id,
+        fileName: dataset.fileName,
+        fileSize: dataset.fileSize,
+        date: dataset.date,
+        recordCount: dataset.recordCount,
+        uploadTime: dataset.createdAt,
+        deviceInfo: {
+          deviceId: dataset.deviceId,
+          model: dataset.deviceModel,
+          firmware: dataset.deviceFirmware
+        },
+        preview
+      }
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const downloadDataset = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const userId = (request.user as any).userId;
+    const { id } = request.params as { id: string };
+
+    const dataset = await prisma.dataset.findFirst({
+      where: { id, userId }
+    });
+
+    if (!dataset) {
+      return reply.code(404).send({
+        success: false,
+        error: {
+          code: 'DATASET_NOT_FOUND',
+          message: '数据集不存在'
+        }
+      });
+    }
+
+    const fileContent = await fs.readFile(dataset.filePath);
+
+    reply.header('Content-Type', 'application/octet-stream');
+    reply.header('Content-Disposition', `attachment; filename="${encodeURIComponent(dataset.fileName)}"`);
+    reply.header('Content-Length', dataset.fileSize);
+
+    return reply.send(fileContent);
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getStats = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const userId = (request.user as any).userId;
+
+    const totalDatasets = await prisma.dataset.count({
+      where: { userId }
+    });
+
+    const stats = await prisma.dataset.aggregate({
+      where: { userId },
+      _sum: {
+        recordCount: true,
+        fileSize: true
+      },
+      _min: {
+        date: true
+      },
+      _max: {
+        date: true
+      }
+    });
+
+    const recentUploads = await prisma.dataset.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: {
+        id: true,
+        fileName: true,
+        fileSize: true,
+        date: true,
+        createdAt: true
+      }
+    });
+
+    return reply.send({
+      success: true,
+      data: {
+        totalDatasets,
+        totalRecords: stats._sum.recordCount || 0,
+        totalSize: stats._sum.fileSize || 0,
+        dateRange: {
+          earliest: stats._min.date,
+          latest: stats._max.date
+        },
+        recentUploads: recentUploads.map(d => ({
+          id: d.id,
+          fileName: d.fileName,
+          fileSize: d.fileSize,
+          date: d.date,
+          uploadTime: d.createdAt
+        }))
+      }
+    });
+  } catch (error) {
+    throw error;
+  }
+};

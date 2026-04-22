@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  username    String   @unique
+  email       String   @unique
+  password    String
+  phone       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastLoginAt DateTime?
+  isActive    Boolean  @default(true)
+  datasets    Dataset[]
+  uploadLogs  UploadLog[]
+
+  @@map("users")
+}
+
+model Dataset {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  fileName       String
+  filePath       String
+  fileSize       Int
+  date           DateTime
+  recordCount    Int      @default(0)
+  deviceId       String?
+  deviceModel    String?
+  deviceFirmware String?
+  uploadStatus   String   @default("completed")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+  @@index([date])
+  @@index([userId, date])
+  @@map("datasets")
+}
+
+model UploadLog {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  datasetId    String?
+  status       String
+  errorMessage String?
+  fileSize     Int
+  uploadedAt   DateTime @default(now())
+  ipAddress    String?
+  userAgent    String?
+
+  @@map("upload_logs")
+}

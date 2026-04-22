@@ -1,0 +1,24 @@
+{
+  "name": "gga-data-platform",
+  "version": "1.0.0",
+  "description": "GGA数据管理服务平台",
+  "private": true,
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev --workspace=server",
+    "dev:web": "npm run dev --workspace=web",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:web\"",
+    "build:server": "npm run build --workspace=server",
+    "build:web": "npm run build --workspace=web",
+    "build": "npm run build:server && npm run build:web",
+    "start:server": "npm run start --workspace=server",
+    "start:web": "npm run preview --workspace=web",
+    "start": "npm run start:server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
