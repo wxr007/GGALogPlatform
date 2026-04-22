@@ -8,19 +8,34 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(uuid())
-  username    String   @unique
-  email       String   @unique
-  password    String
-  phone       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  lastLoginAt DateTime?
-  isActive    Boolean  @default(true)
-  datasets    Dataset[]
-  uploadLogs  UploadLog[]
+  id             String        @id @default(uuid())
+  username       String        @unique
+  email          String        @unique
+  password       String
+  phone          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  lastLoginAt    DateTime?
+  isActive       Boolean       @default(true)
+  datasets       Dataset[]
+  uploadLogs     UploadLog[]
+  refreshTokens  RefreshToken[]
 
   @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
 }
 
 model Dataset {

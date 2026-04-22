@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { register, login, getProfile } from '../controllers/auth.controller';
+import { register, login, refreshToken, logout, getProfile } from '../controllers/auth.controller';
 
 export const authRoutes = async (fastify: FastifyInstance) => {
   fastify.post('/register', {
@@ -30,6 +30,31 @@ export const authRoutes = async (fastify: FastifyInstance) => {
       }
     },
     handler: login
+  });
+
+  fastify.post('/refresh', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['refreshToken'],
+        properties: {
+          refreshToken: { type: 'string' }
+        }
+      }
+    },
+    handler: refreshToken
+  });
+
+  fastify.post('/logout', {
+    schema: {
+      body: {
+        type: 'object',
+        properties: {
+          refreshToken: { type: 'string' }
+        }
+      }
+    },
+    handler: logout
   });
 
   fastify.get('/profile', {

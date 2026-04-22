@@ -12,7 +12,8 @@ import { dataRoutes } from './routes/data.routes';
 
 declare module 'fastify' {
   interface FastifyInstance {
-    generateToken: (payload: { id: string; username: string }) => string;
+    generateAccessToken: (payload: { id: string; username: string }) => string;
+    generateRefreshToken: (payload: { id: string; username: string }) => string;
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
 
@@ -77,10 +78,23 @@ app.register(swaggerUI, {
   }
 });
 
-app.decorate('generateToken', function(payload: { id: string; username: string }) {
+app.decorate('generateAccessToken', function(payload: { id: string; username: string }) {
   return this.jwt.sign({
     userId: payload.id,
-    username: payload.username
+    username: payload.username,
+    type: 'access'
+  }, {
+    expiresIn: config.jwt.accessExpiresIn
+  });
+});
+
+app.decorate('generateRefreshToken', function(payload: { id: string; username: string }) {
+  return this.jwt.sign({
+    userId: payload.id,
+    username: payload.username,
+    type: 'refresh'
+  }, {
+    expiresIn: config.jwt.refreshExpiresIn
   });
 });
 

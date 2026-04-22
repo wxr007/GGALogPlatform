@@ -6,7 +6,8 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   jwt: {
     secret: process.env.JWT_SECRET || 'your-secret-key',
-    expiresIn: process.env.JWT_EXPIRES_IN || '24h'
+    accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '2h',
+    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d'
   },
   upload: {
     dir: process.env.UPLOAD_DIR || path.join(__dirname, '../../uploads'),
