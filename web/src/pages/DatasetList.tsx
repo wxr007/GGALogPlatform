@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Table, Button, DatePicker, Space, Card } from 'antd'
-import { EyeOutlined, DownloadOutlined, ReloadOutlined } from '@ant-design/icons'
+import { Table, Button, DatePicker, Space, Card, Popconfirm, message } from 'antd'
+import { EyeOutlined, DownloadOutlined, ReloadOutlined, DeleteOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dataService } from '../services/data.service'
 
@@ -47,6 +47,17 @@ const DatasetList = () => {
       await dataService.downloadDataset(id, fileName)
     } catch (error) {
       console.error('Failed to download:', error)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      await dataService.deleteDataset(id)
+      message.success('删除成功')
+      loadDatasets()
+    } catch (error) {
+      console.error('Failed to delete:', error)
+      message.error('删除失败')
     }
   }
 
@@ -106,6 +117,21 @@ const DatasetList = () => {
           >
             下载
           </Button>
+          <Popconfirm
+            title="确定删除此数据集？"
+            description="删除后无法恢复"
+            onConfirm={() => handleDelete(record.id)}
+            okText="确定"
+            cancelText="取消"
+          >
+            <Button
+              type="link"
+              danger
+              icon={<DeleteOutlined />}
+            >
+              删除
+            </Button>
+          </Popconfirm>
         </Space>
       )
     }

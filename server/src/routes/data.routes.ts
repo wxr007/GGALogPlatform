@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { uploadData, getDatasets, getDatasetDetail, downloadDataset, getStats } from '../controllers/data.controller';
+import { uploadData, getDatasets, getDatasetDetail, downloadDataset, deleteDataset, checkFilesExist, getStats } from '../controllers/data.controller';
 
 export const dataRoutes = async (fastify: FastifyInstance) => {
   fastify.post('/upload', {
@@ -20,6 +20,28 @@ export const dataRoutes = async (fastify: FastifyInstance) => {
   fastify.get('/datasets/:id/download', {
     preHandler: [fastify.authenticate],
     handler: downloadDataset
+  });
+
+  fastify.delete('/datasets/:id', {
+    preHandler: [fastify.authenticate],
+    handler: deleteDataset
+  });
+
+  fastify.post('/check-files', {
+    preHandler: [fastify.authenticate],
+    schema: {
+      body: {
+        type: 'object',
+        required: ['fileNames'],
+        properties: {
+          fileNames: {
+            type: 'array',
+            items: { type: 'string' }
+          }
+        }
+      }
+    },
+    handler: checkFilesExist
   });
 
   fastify.get('/stats', {

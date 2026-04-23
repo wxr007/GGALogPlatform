@@ -218,6 +218,96 @@ export const downloadDataset = async (request: FastifyRequest, reply: FastifyRep
   }
 };
 
+export const deleteDataset = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const userId = (request.user as any).userId;
+    const { id } = request.params as { id: string };
+
+    const dataset = await prisma.dataset.findFirst({
+      where: { id, userId }
+    });
+
+    if (!dataset) {
+      return reply.code(404).send({
+        success: false,
+        error: {
+          code: 'DATASET_NOT_FOUND',
+          message: '数据集不存在'
+        }
+      });
+    }
+
+    try {
+      await fs.unlink(dataset.filePath);
+    } catch (err) {
+      // 文件可能已被删除，继续删除数据库记录
+    }
+
+    await prisma.dataset.delete({
+      where: { id }
+    });
+
+    return reply.send({
+      success: true,
+      message: '数据集已删除'
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const checkFilesExist = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const userId = (request.user as any).userId;
+    const { fileNames } = request.body as { fileNames: string[] };
+
+    if (!fileNames || !Array.isArray(fileNames)) {
+      return reply.code(400).send({
+        success: false,
+        error: {
+          code: 'INVALID_PARAMS',
+          message: '请提供文件名列表'
+        }
+      });
+    }
+
+    const existingFiles = await prisma.dataset.findMany({
+      where: {
+        userId,
+        fileName: {
+          in: fileNames
+        }
+      },
+      select: {
+        fileName: true,
+        id: true,
+        date: true,
+        fileSize: true,
+        createdAt: true
+      }
+    });
+
+    const existingFileNames = new Set(existingFiles.map(f => f.fileName));
+    const notUploaded = fileNames.filter(name => !existingFileNames.has(name));
+
+    return reply.send({
+      success: true,
+      data: {
+        existing: existingFiles.map(f => ({
+          fileName: f.fileName,
+          datasetId: f.id,
+          date: f.date,
+          fileSize: f.fileSize,
+          uploadedAt: f.createdAt
+        })),
+        notUploaded
+      }
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const getStats = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const userId = (request.user as any).userId;

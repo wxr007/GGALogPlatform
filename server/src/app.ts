@@ -34,10 +34,7 @@ app.register(cors, {
 });
 
 app.register(jwt, {
-  secret: config.jwt.secret,
-  sign: {
-    expiresIn: config.jwt.expiresIn
-  }
+  secret: config.jwt.secret
 });
 
 app.register(multipart, {

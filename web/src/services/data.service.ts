@@ -31,6 +31,16 @@ export const dataService = {
     link.remove();
   },
 
+  deleteDataset: async (id: string) => {
+    const response = await api.delete(`/data/datasets/${id}`);
+    return response.data;
+  },
+
+  checkFilesExist: async (fileNames: string[]) => {
+    const response = await api.post('/data/check-files', { fileNames });
+    return response.data;
+  },
+
   getStats: async () => {
     const response = await api.get('/data/stats');
     return response.data;

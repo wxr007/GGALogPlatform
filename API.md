@@ -405,7 +405,94 @@ GET /api/data/datasets?page=1&limit=20&startDate=2024-01-01&endDate=2024-01-31&s
 
 ---
 
-### 6. 获取数据集详情
+### 7. 删除数据集
+
+**接口地址**: `DELETE /api/data/datasets/{id}`
+
+**请求头**:
+```
+Authorization: Bearer <access_token>
+```
+
+**路径参数**:
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | string | 是 | 数据集ID |
+
+**成功响应** (200):
+```json
+{
+  "success": true,
+  "message": "数据集已删除"
+}
+```
+
+**失败响应**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "DATASET_NOT_FOUND",
+    "message": "数据集不存在"
+  }
+}
+```
+
+---
+
+### 8. 检查文件是否已上传
+
+**接口地址**: `POST /api/data/check-files`
+
+**请求头**:
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+**请求体**:
+```json
+{
+  "fileNames": ["data1.gga", "data2.gga", "data3.gga"]
+}
+```
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| fileNames | string[] | 是 | 文件名列表 |
+
+**成功响应** (200):
+```json
+{
+  "success": true,
+  "data": {
+    "existing": [
+      {
+        "fileName": "data1.gga",
+        "datasetId": "uuid-string",
+        "date": "2024-01-15T00:00:00.000Z",
+        "fileSize": 12345,
+        "uploadedAt": "2024-01-15T10:30:00.000Z"
+      }
+    ],
+    "notUploaded": ["data2.gga", "data3.gga"]
+  }
+}
+```
+
+| 返回字段 | 说明 |
+|----------|------|
+| existing | 已上传的文件列表，包含详细信息 |
+| notUploaded | 未上传的文件名列表 |
+
+**移动端使用场景**:
+- 上传前调用此接口，避免重复上传
+- 断点续传时检查哪些文件需要继续上传
+
+---
+
+### 9. 获取数据集详情
 
 **接口地址**: `GET /api/data/datasets/{id}`
 
@@ -443,7 +530,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 7. 下载数据集文件
+### 10. 下载数据集文件
 
 **接口地址**: `GET /api/data/datasets/{id}/download`
 
@@ -467,7 +554,7 @@ Authorization: Bearer <token>
 
 ## 数据统计模块
 
-### 8. 获取数据统计
+### 11. 获取数据统计
 
 **接口地址**: `GET /api/data/stats`
 
