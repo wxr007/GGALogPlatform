@@ -73,7 +73,7 @@ const DatasetDetail = () => {
         <Descriptions column={2} bordered>
           <Descriptions.Item label="文件名">{dataset.fileName}</Descriptions.Item>
           <Descriptions.Item label="文件大小">{formatSize(dataset.fileSize)}</Descriptions.Item>
-          <Descriptions.Item label="数据日期">{dayjs(dataset.date).format('YYYY-MM-DD')}</Descriptions.Item>
+          <Descriptions.Item label="数据时间">{dayjs(dataset.date).format('YYYY-MM-DD HH:mm:ss')}</Descriptions.Item>
           <Descriptions.Item label="记录数">{dataset.recordCount}</Descriptions.Item>
           <Descriptions.Item label="上传时间">{dayjs(dataset.uploadTime).format('YYYY-MM-DD HH:mm:ss')}</Descriptions.Item>
           <Descriptions.Item label="设备ID">{dataset.deviceInfo?.deviceId || '-'}</Descriptions.Item>

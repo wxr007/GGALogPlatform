@@ -1,8 +1,17 @@
 # GGA数据管理平台 - 移动端API接口文档
 
-> **版本**: v1.0  
-> **更新日期**: 2026-04-22  
+> **版本**: v1.1  
+> **更新日期**: 2026-04-23  
 > **基础URL**: `http://your-server-domain/api`
+
+---
+
+## 文档修改日志
+
+| 版本 | 日期 | 修改内容 | 影响范围 |
+|------|------|----------|----------|
+| v1.1 | 2026-04-23 | 1. 上传接口参数 `date` 改为 `dateTime`，支持精确时间<br>2. 文件后缀从 `.gga` 改为 `.log`<br>3. 新增删除数据集接口<br>4. 新增检查文件上传状态接口 | 移动端上传功能需更新参数名和文件后缀 |
+| v1.0 | 2026-04-22 | 初始版本，包含认证、数据上传、查询、统计等基础接口 | - |
 
 ---
 
@@ -309,8 +318,8 @@ Content-Type: multipart/form-data
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| file | File | 是 | GGA数据文件（.gga格式） |
-| date | string | 否 | 数据日期，格式：YYYY-MM-DD，默认为当天 |
+| file | File | 是 | GGA数据文件（.log格式） |
+| dateTime | string | 否 | 数据时间，ISO 8601格式，默认为当前时间 |
 | deviceId | string | 否 | 设备ID |
 | deviceModel | string | 否 | 设备型号 |
 
@@ -318,8 +327,8 @@ Content-Type: multipart/form-data
 ```bash
 curl -X POST http://your-server-domain/api/data/upload \
   -H "Authorization: Bearer <token>" \
-  -F "file=@/path/to/data.gga" \
-  -F "date=2024-01-15" \
+  -F "file=@/path/to/data.log" \
+  -F "dateTime=2024-01-15T10:30:00Z" \
   -F "deviceId=device-001" \
   -F "deviceModel=Model-X"
 ```
@@ -330,7 +339,7 @@ curl -X POST http://your-server-domain/api/data/upload \
   "success": true,
   "data": {
     "datasetId": "uuid-string",
-    "fileName": "data.gga",
+    "fileName": "data.log",
     "fileSize": 12345,
     "recordCount": 100,
     "uploadTime": "2024-01-15T10:30:00.000Z"
@@ -344,7 +353,7 @@ curl -X POST http://your-server-domain/api/data/upload \
   "success": false,
   "error": {
     "code": "FILE_INVALID_TYPE",
-    "message": "只支持.gga格式的文件"
+    "message": "只支持.log格式的文件"
   }
 }
 ```
@@ -607,7 +616,7 @@ Authorization: Bearer <token>
 | VALIDATION_ERROR | 400 | 参数验证失败 |
 | FILE_REQUIRED | 400 | 请上传文件 |
 | FILE_TOO_LARGE | 413 | 文件过大（最大50MB） |
-| FILE_INVALID_TYPE | 400 | 文件类型无效，只支持.gga格式 |
+| FILE_INVALID_TYPE | 400 | 文件类型无效，只支持.log格式 |
 | DATASET_NOT_FOUND | 404 | 数据集不存在 |
 | ACCESS_DENIED | 403 | 无权访问 |
 | INTERNAL_ERROR | 500 | 服务器内部错误 |

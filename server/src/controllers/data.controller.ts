@@ -9,6 +9,16 @@ export const uploadData = async (request: FastifyRequest, reply: FastifyReply) =
     const userId = (request.user as any).userId;
     const data = await request.file();
 
+    console.log('=== 上传接口调试日志 ===');
+    console.log('userId:', userId);
+    console.log('文件名:', data?.filename);
+    console.log('MIME类型:', data?.mimetype);
+    console.log('请求体参数:', request.body);
+    console.log('查询参数:', request.query);
+    console.log('========================');
+    // console.log('参数:', request);
+    // console.log('========================');
+
     if (!data) {
       return reply.code(400).send({
         success: false,
@@ -19,26 +29,29 @@ export const uploadData = async (request: FastifyRequest, reply: FastifyReply) =
       });
     }
 
-    if (!data.filename.endsWith('.gga')) {
+    if (!data.filename.endsWith('.log')) {
       return reply.code(400).send({
         success: false,
         error: {
           code: 'FILE_INVALID_TYPE',
-          message: '只支持.gga格式的文件'
+          message: '只支持.log格式的文件'
         }
       });
     }
 
-    const dateStr = (request.body as any)?.date || new Date().toISOString().split('T')[0];
+    const dateTimeStr = (request.body as any)?.dateTime || new Date().toISOString();
     const deviceId = (request.body as any)?.deviceId;
     const deviceModel = (request.body as any)?.deviceModel;
+
+    const dateTime = new Date(dateTimeStr);
+    const dateStr = dateTime.toISOString().split('T')[0];
 
     const dateDir = path.join(config.upload.dir, userId.toString(), dateStr);
     await fs.mkdir(dateDir, { recursive: true });
 
     const timestamp = Date.now();
     const randomId = Math.random().toString(36).substring(2, 8);
-    const fileName = `${timestamp}_${randomId}.gga`;
+    const fileName = `${timestamp}_${randomId}.log`;
     const filePath = path.join(dateDir, fileName);
 
     const fileBuffer = await data.toBuffer();
@@ -52,7 +65,7 @@ export const uploadData = async (request: FastifyRequest, reply: FastifyReply) =
         fileName: data.filename,
         filePath,
         fileSize: fileBuffer.length,
-        date: new Date(dateStr),
+        date: dateTime,
         recordCount,
         deviceId,
         deviceModel,

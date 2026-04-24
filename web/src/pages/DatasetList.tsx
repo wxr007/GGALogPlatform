@@ -76,10 +76,10 @@ const DatasetList = () => {
       key: 'fileName'
     },
     {
-      title: '数据日期',
+      title: '数据时间',
       dataIndex: 'date',
       key: 'date',
-      render: (date: string) => dayjs(date).format('YYYY-MM-DD')
+      render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm:ss')
     },
     {
       title: '记录数',
