@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
@@ -13,6 +14,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 }
 
 function App() {
+  const { isAuthenticated, loadUser } = useAuthStore()
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadUser()
+    }
+  }, [isAuthenticated, loadUser])
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
