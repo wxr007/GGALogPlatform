@@ -7,19 +7,43 @@ import { config } from '../config/app';
 export const uploadData = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const userId = (request.user as any).userId;
-    const data = await request.file();
-
-    console.log('=== 上传接口调试日志 ===');
+    
+    console.log('=== Upload API debug log ===');
     console.log('userId:', userId);
-    console.log('文件名:', data?.filename);
-    console.log('MIME类型:', data?.mimetype);
-    console.log('请求体参数:', request.body);
-    console.log('查询参数:', request.query);
-    console.log('========================');
-    // console.log('参数:', request);
-    // console.log('========================');
 
-    if (!data) {
+    // 使用 parts() 处理所有部分
+    const parts = request.parts();
+    
+    let filePart: any = null;
+    let fileBuffer: Buffer | null = null;
+    let dateTimeStr = new Date().toISOString();
+    let deviceId: string | undefined;
+    let deviceModel: string | undefined;
+    
+    for await (const part of parts) {
+      if (part.file) {
+        filePart = part;
+        console.log('File name:', part.filename);
+        console.log('MIME type:', part.mimetype);
+        // 使用 toBuffer() 读取文件内容
+        fileBuffer = await part.toBuffer();
+        console.log('File size:', fileBuffer.length);
+      } else {
+        console.log('Form field:', part.fieldname, '=', part.value);
+        if (part.fieldname === 'dateTime') {
+          dateTimeStr = part.value;
+        } else if (part.fieldname === 'deviceId') {
+          deviceId = part.value;
+        } else if (part.fieldname === 'deviceModel') {
+          deviceModel = part.value;
+        }
+      }
+    }
+    
+    console.log('========================');
+
+    if (!filePart || !fileBuffer) {
+      console.log('No file uploaded');
       return reply.code(400).send({
         success: false,
         error: {
@@ -29,7 +53,7 @@ export const uploadData = async (request: FastifyRequest, reply: FastifyReply) =
       });
     }
 
-    if (!data.filename.endsWith('.log')) {
+    if (!filePart.filename.endsWith('.log')) {
       return reply.code(400).send({
         success: false,
         error: {
@@ -38,10 +62,6 @@ export const uploadData = async (request: FastifyRequest, reply: FastifyReply) =
         }
       });
     }
-
-    const dateTimeStr = (request.body as any)?.dateTime || new Date().toISOString();
-    const deviceId = (request.body as any)?.deviceId;
-    const deviceModel = (request.body as any)?.deviceModel;
 
     const dateTime = new Date(dateTimeStr);
     const dateStr = dateTime.toISOString().split('T')[0];
@@ -54,15 +74,13 @@ export const uploadData = async (request: FastifyRequest, reply: FastifyReply) =
     const fileName = `${timestamp}_${randomId}.log`;
     const filePath = path.join(dateDir, fileName);
 
-    const fileBuffer = await data.toBuffer();
     await fs.writeFile(filePath, fileBuffer);
 
     const recordCount = fileBuffer.toString().split('\n').filter(line => line.includes('$GPGGA') || line.includes('$GNGGA')).length;
-
     const dataset = await prisma.dataset.create({
       data: {
         userId,
-        fileName: data.filename,
+        fileName: filePart.filename,
         filePath,
         fileSize: fileBuffer.length,
         date: dateTime,
@@ -77,13 +95,14 @@ export const uploadData = async (request: FastifyRequest, reply: FastifyReply) =
       success: true,
       data: {
         datasetId: dataset.id,
-        fileName: data.filename,
+        fileName: filePart.filename,
         fileSize: fileBuffer.length,
         recordCount,
         uploadTime: dataset.createdAt
       }
     });
   } catch (error) {
+    console.error('Upload API error:', error);
     throw error;
   }
 };

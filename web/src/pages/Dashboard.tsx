@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Card, Row, Col, Statistic, Table, Spin, Upload, Button, message } from 'antd'
-import { DatabaseOutlined, FileTextOutlined, HddOutlined, CalendarOutlined, UploadOutlined } from '@ant-design/icons'
+import { Card, Row, Col, Statistic, Table, Spin } from 'antd'
+import { DatabaseOutlined, FileTextOutlined, HddOutlined, CalendarOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dataService } from '../services/data.service'
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState<any>(null)
-  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     loadStats()
@@ -25,7 +24,7 @@ const Dashboard = () => {
     }
   }
 
-  const handleUpload = async (file: any) => {
+  /* const handleUpload = async (file: any) => {
     try {
       setUploading(true)
       const formData = new FormData()
@@ -43,7 +42,7 @@ const Dashboard = () => {
       const result = await response.json()
       if (result.success) {
         message.success('文件上传成功')
-        loadStats() // 重新加载统计数据
+        loadStats()
       } else {
         message.error(`上传失败: ${result.error.message}`)
       }
@@ -53,8 +52,8 @@ const Dashboard = () => {
     } finally {
       setUploading(false)
     }
-    return false // 阻止自动上传
-  }
+    return false
+  } */
 
   const formatSize = (bytes: number) => {
     if (bytes === 0) return '0 B'
@@ -92,7 +91,7 @@ const Dashboard = () => {
     <div>
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
         <h2>数据概览</h2>
-        <Upload
+        {/* <Upload
           beforeUpload={handleUpload}
           showUploadList={false}
           maxCount={1}
@@ -104,7 +103,7 @@ const Dashboard = () => {
           >
             上传文件
           </Button>
-        </Upload>
+        </Upload> */}
       </Row>
       <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
         <Col span={6}>
