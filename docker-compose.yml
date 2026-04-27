@@ -2,26 +2,35 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:16
+    image: postgres:16-alpine
+    restart: always
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: gga-platform
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-gga-platform}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
 
   server:
     build:
       context: ./server
       dockerfile: Dockerfile
+    restart: always
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/gga-platform
-      - JWT_SECRET=your-super-secret-key-change-in-production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-gga-platform}
+      - JWT_SECRET=${JWT_SECRET:-changeme-in-production}
+      - JWT_ACCESS_EXPIRES_IN=2h
+      - JWT_REFRESH_EXPIRES_IN=30d
+      - UPLOAD_DIR=/app/uploads
+      - MAX_FILE_SIZE=52428800
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost}
     volumes:
       - uploads_data:/app/uploads
     depends_on:
@@ -31,8 +40,9 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
+    restart: always
     ports:
-      - "80:80"
+      - "${WEB_PORT:-8080}:80"
     depends_on:
       - server
 
