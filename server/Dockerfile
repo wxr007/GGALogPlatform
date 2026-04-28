@@ -18,6 +18,7 @@ FROM node:24-alpine
 
 WORKDIR /app/server
 
+COPY package-lock.json ./
 COPY server/package*.json ./
 COPY server/prisma ./prisma/
 
