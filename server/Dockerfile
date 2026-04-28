@@ -2,7 +2,7 @@ FROM node:24-alpine AS builder
 
 WORKDIR /app
 
-COPY package-lock.json ./
+COPY package-lock.json ./server/
 COPY server/package*.json ./server/
 COPY server/prisma ./server/prisma/
 
