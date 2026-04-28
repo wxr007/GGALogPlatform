@@ -2,7 +2,7 @@ FROM node:24-alpine AS build
 
 WORKDIR /app
 
-COPY package-lock.json ./
+COPY package-lock.json ./web/
 COPY web/package*.json ./web/
 
 WORKDIR /app/web
