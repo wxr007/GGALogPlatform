@@ -2,29 +2,31 @@ FROM node:24-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-COPY prisma ./prisma/
+COPY package-lock.json ./
+COPY server/package*.json ./server/
+COPY server/prisma ./server/prisma/
 
+WORKDIR /app/server
 RUN npm ci
 
-COPY . .
+COPY server/ .
 
 RUN npx prisma generate
 RUN npm run build
 
 FROM node:24-alpine
 
-WORKDIR /app
+WORKDIR /app/server
 
-COPY package*.json ./
-COPY prisma ./prisma/
+COPY server/package*.json ./
+COPY server/prisma ./prisma/
 
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 RUN npx prisma generate
 
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/server/dist ./dist
 
-RUN mkdir -p /app/uploads
+RUN mkdir -p /app/server/uploads
 
 EXPOSE 3000
 

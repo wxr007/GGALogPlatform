@@ -2,18 +2,20 @@ FROM node:24-alpine AS build
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package-lock.json ./
+COPY web/package*.json ./web/
 
+WORKDIR /app/web
 RUN npm ci
 
-COPY . .
+COPY web/ .
 
 RUN npm run build
 
 FROM nginx:alpine
 
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/web/dist /usr/share/nginx/html
+COPY web/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
