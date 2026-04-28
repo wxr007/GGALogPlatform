@@ -98,7 +98,7 @@ vim .env.production.local
 git pull origin master
 
 # 2. 构建镜像
-docker compose --env-file .env.production build --no-cache
+docker compose --env-file .env.production.local build --no-cache
 
 # 3. 启动数据库
 docker compose up -d postgres
@@ -108,7 +108,7 @@ sleep 3
 docker compose run --rm server npx prisma migrate deploy
 
 # 5. 启动所有服务
-docker compose --env-file .env.production up -d
+docker compose --env-file .env.production.local up -d
 ```
 
 ### 第五步：配置反向代理（可选）
@@ -133,7 +133,7 @@ bash deploy.sh
 ```bash
 cd /opt/GGALogPlatform
 git pull origin master
-docker compose --env-file .env.production up -d --build
+docker compose --env-file .env.production.local up -d --build
 ```
 
 ### 常用运维命令
