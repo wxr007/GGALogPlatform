@@ -100,15 +100,14 @@ git pull origin master
 # 2. 构建镜像
 docker compose --env-file .env.production.local build --no-cache
 
-# 3. 启动数据库
-docker compose up -d postgres
-sleep 3
+# 3. 启动所有服务（包含数据库）
+docker compose --env-file .env.production.local up -d
 
 # 4. 执行数据库迁移
 docker compose run --rm server npx prisma migrate deploy
 
-# 5. 启动所有服务
-docker compose --env-file .env.production.local up -d
+# 5. 重启后端服务使迁移生效
+docker compose restart server
 ```
 
 ### 第五步：配置反向代理（可选）

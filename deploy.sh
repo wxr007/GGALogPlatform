@@ -10,21 +10,18 @@ if [ ! -f .env.production.local ]; then
   exit 1
 fi
 
-echo "[1/5] 拉取最新代码..."
+echo "[1/4] 拉取最新代码..."
 git pull origin master
 
-echo "[2/5] 构建Docker镜像..."
+echo "[2/4] 构建Docker镜像..."
 docker compose --env-file .env.production.local build --no-cache
 
-echo "[3/5] 启动数据库..."
-docker compose up -d postgres
-sleep 3
-
-echo "[4/5] 执行数据库迁移..."
-docker compose run --rm server npx prisma migrate deploy
-
-echo "[5/5] 重启服务..."
+echo "[3/4] 启动所有服务..."
 docker compose --env-file .env.production.local up -d
+
+echo "[4/4] 执行数据库迁移..."
+docker compose run --rm server npx prisma migrate deploy
+docker compose restart server
 
 echo ""
 echo "=== 部署完成 ==="
