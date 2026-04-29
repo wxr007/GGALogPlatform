@@ -16,10 +16,6 @@ declare module 'fastify' {
     generateRefreshToken: (payload: { id: string; username: string }) => string;
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
-
-  interface FastifyRequest {
-    jwtVerify: () => Promise<string>;
-  }
 }
 
 export const app = Fastify({

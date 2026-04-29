@@ -21,21 +21,21 @@ export const uploadData = async (request: FastifyRequest, reply: FastifyReply) =
     let deviceModel: string | undefined;
     
     for await (const part of parts) {
-      if (part.file) {
+      if (part.type === 'file') {
         filePart = part;
         console.log('File name:', part.filename);
         console.log('MIME type:', part.mimetype);
         // 使用 toBuffer() 读取文件内容
         fileBuffer = await part.toBuffer();
-        console.log('File size:', fileBuffer.length);
+        console.log('File size:', fileBuffer?.length);
       } else {
         console.log('Form field:', part.fieldname, '=', part.value);
         if (part.fieldname === 'dateTime') {
-          dateTimeStr = part.value;
+          dateTimeStr = part.value as string;
         } else if (part.fieldname === 'deviceId') {
-          deviceId = part.value;
+          deviceId = part.value as string;
         } else if (part.fieldname === 'deviceModel') {
-          deviceModel = part.value;
+          deviceModel = part.value as string;
         }
       }
     }
