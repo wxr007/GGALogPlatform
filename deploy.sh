@@ -20,7 +20,7 @@ echo "[3/4] 启动所有服务..."
 docker compose --env-file .env.production.local up -d
 
 echo "[4/4] 执行数据库迁移..."
-docker compose run --rm server npx prisma migrate deploy
+docker compose --env-file .env.production.local run --rm server npx prisma migrate deploy
 docker compose restart server
 
 echo ""

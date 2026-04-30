@@ -8,18 +8,18 @@ datasource db {
 }
 
 model User {
-  id             String        @id @default(uuid())
-  username       String        @unique
-  email          String        @unique
-  password       String
-  phone          String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  lastLoginAt    DateTime?
-  isActive       Boolean       @default(true)
-  datasets       Dataset[]
-  uploadLogs     UploadLog[]
-  refreshTokens  RefreshToken[]
+  id            String         @id @default(uuid())
+  username      String         @unique
+  email         String         @unique
+  password      String
+  phone         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  lastLoginAt   DateTime?
+  isActive      Boolean        @default(true)
+  datasets      Dataset[]
+  refreshTokens RefreshToken[]
+  uploadLogs    UploadLog[]
 
   @@map("users")
 }
@@ -27,11 +27,11 @@ model User {
 model RefreshToken {
   id        String   @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
   token     String   @unique
   expiresAt DateTime
   revoked   Boolean  @default(false)
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([token])
@@ -41,7 +41,6 @@ model RefreshToken {
 model Dataset {
   id             String   @id @default(uuid())
   userId         String
-  user           User     @relation(fields: [userId], references: [id])
   fileName       String
   filePath       String
   fileSize       Int
@@ -53,6 +52,7 @@ model Dataset {
   uploadStatus   String   @default("completed")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([date])
@@ -63,7 +63,6 @@ model Dataset {
 model UploadLog {
   id           String   @id @default(uuid())
   userId       String
-  user         User     @relation(fields: [userId], references: [id])
   datasetId    String?
   status       String
   errorMessage String?
@@ -71,6 +70,7 @@ model UploadLog {
   uploadedAt   DateTime @default(now())
   ipAddress    String?
   userAgent    String?
+  user         User     @relation(fields: [userId], references: [id])
 
   @@map("upload_logs")
 }

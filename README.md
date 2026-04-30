@@ -104,7 +104,7 @@ docker compose --env-file .env.production.local build --no-cache
 docker compose --env-file .env.production.local up -d
 
 # 4. 执行数据库迁移
-docker compose run --rm server npx prisma migrate deploy
+docker compose --env-file .env.production.local run --rm server npx prisma migrate deploy
 
 # 5. 重启后端服务使迁移生效
 docker compose restart server
