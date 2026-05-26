@@ -5,16 +5,18 @@ import multipart from '@fastify/multipart';
 import swagger from '@fastify/swagger';
 import swaggerUI from '@fastify/swagger-ui';
 import { config } from './config/app';
-import { connectDatabase } from './config/database';
+import { connectDatabase, prisma } from './config/database';
 import { errorHandler } from './middleware/error';
 import { authRoutes } from './routes/auth.routes';
 import { dataRoutes } from './routes/data.routes';
+import { adminRoutes } from './routes/admin.routes';
 
 declare module 'fastify' {
   interface FastifyInstance {
     generateAccessToken: (payload: { id: string; username: string }) => string;
     generateRefreshToken: (payload: { id: string; username: string }) => string;
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    requireAdmin: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
 }
 
@@ -105,8 +107,37 @@ app.decorate('authenticate', async (request: any, reply: any) => {
   }
 });
 
+app.decorate('requireAdmin', async (request: any, reply: any) => {
+  const userId = request.user?.userId;
+  if (!userId) {
+    return reply.code(401).send({
+      success: false,
+      error: {
+        code: 'AUTH_REQUIRED',
+        message: '请先登录'
+      }
+    });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { isAdmin: true }
+  });
+
+  if (!user || !user.isAdmin) {
+    return reply.code(403).send({
+      success: false,
+      error: {
+        code: 'FORBIDDEN',
+        message: '需要管理员权限'
+      }
+    });
+  }
+});
+
 app.register(authRoutes, { prefix: '/api/auth' });
 app.register(dataRoutes, { prefix: '/api/data' });
+app.register(adminRoutes, { prefix: '/api/admin' });
 
 app.setErrorHandler(errorHandler);
 

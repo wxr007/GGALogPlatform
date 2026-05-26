@@ -283,7 +283,8 @@ export const getProfile = async (request: FastifyRequest, reply: FastifyReply) =
         createdAt: true,
         updatedAt: true,
         lastLoginAt: true,
-        isActive: true
+        isActive: true,
+        isAdmin: true
       }
     });
 

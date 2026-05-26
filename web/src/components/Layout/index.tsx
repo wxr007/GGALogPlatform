@@ -3,9 +3,11 @@ import { Layout as AntLayout, Menu } from 'antd'
 import {
   DashboardOutlined,
   FolderOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  TeamOutlined
 } from '@ant-design/icons'
 import { useAuthStore } from '../../store/auth.store'
+import { useMemo } from 'react'
 
 const { Header, Content, Sider } = AntLayout
 
@@ -19,18 +21,30 @@ const Layout = () => {
     navigate('/login')
   }
 
-  const menuItems = [
-    {
-      key: '/',
-      icon: <DashboardOutlined />,
-      label: '仪表盘'
-    },
-    {
-      key: '/datasets',
-      icon: <FolderOutlined />,
-      label: '数据集'
+  const menuItems = useMemo(() => {
+    const items: any[] = [
+      {
+        key: '/',
+        icon: <DashboardOutlined />,
+        label: '仪表盘'
+      },
+      {
+        key: '/datasets',
+        icon: <FolderOutlined />,
+        label: '数据集'
+      }
+    ]
+
+    if (user?.isAdmin) {
+      items.push({
+        key: '/admin',
+        icon: <TeamOutlined />,
+        label: '用户管理'
+      })
     }
-  ]
+
+    return items
+  }, [user?.isAdmin])
 
   return (
     <AntLayout style={{ minHeight: '100vh' }}>
