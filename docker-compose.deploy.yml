@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gga-platform}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+
+  server:
+    image: ${DOCKER_REGISTRY:-wxr007}/gga-platform-server:latest
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-gga-platform}
+      - JWT_SECRET=${JWT_SECRET:-changeme-in-production}
+      - JWT_ACCESS_EXPIRES_IN=2h
+      - JWT_REFRESH_EXPIRES_IN=30d
+      - UPLOAD_DIR=/app/uploads
+      - MAX_FILE_SIZE=52428800
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123456}
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - postgres
+
+  web:
+    image: ${DOCKER_REGISTRY:-wxr007}/gga-platform-web:latest
+    restart: always
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - server
+
+volumes:
+  postgres_data:
+  uploads_data:

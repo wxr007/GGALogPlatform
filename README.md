@@ -93,20 +93,33 @@ vim .env.production.local
 
 ### 第四步：首次部署
 
-```bash
-# 1. 拉取代码
-git pull origin master
+**若服务器性能较低**（1核2G），推荐使用预构建镜像方案，避免在服务器上编译：
 
-# 2. 构建镜像
+> 在本地开发机（性能较好的电脑）上执行：
+> ```bash
+> bash build.sh
+> ```
+> 这会在本地构建镜像并推送到 Docker Hub，服务器只需拉取即可。
+
+然后在服务器上：
+
+```bash
+bash deploy.sh
+```
+
+**服务器性能足够**的情况下，也可手动完成首次部署：
+
+```bash
+# 1. 构建镜像
 docker compose --env-file .env.production.local build --no-cache
 
-# 3. 启动所有服务（包含数据库）
+# 2. 启动所有服务（包含数据库）
 docker compose --env-file .env.production.local up -d
 
-# 4. 执行数据库迁移
+# 3. 执行数据库迁移
 docker compose --env-file .env.production.local run --rm server npx prisma migrate deploy
 
-# 5. 重启后端服务使迁移生效
+# 4. 重启后端服务使迁移生效
 docker compose restart server
 ```
 
@@ -120,12 +133,34 @@ docker compose restart server
 
 ### 日常更新
 
-每次代码更新后，只需执行：
+每次代码更新后，在本地开发机构建并推送镜像：
+
+```bash
+# 本地执行（构建 + 推送到 Docker Hub）
+bash build.sh
+```
+
+然后在服务器上部署：
 
 ```bash
 cd /opt/GGALogPlatform
 bash deploy.sh
 ```
+
+> **部署流程说明**：`deploy.sh` 会 `git pull` 拉取代码（含 `docker-compose.deploy.yml`），然后 `docker compose pull` 拉取预构建镜像，再重启服务。服务器不再执行编译，1核2G 机器也能快速完成。
+
+> **注意**：部署过程较长，SSH 断开会导致脚本中断、服务停止。建议使用 `nohup` 或 `tmux` 防止中断：
+> ```bash
+> # 方式一：nohup 后台运行
+> cd /opt/GGALogPlatform
+> nohup bash deploy.sh > deploy.log 2>&1 &
+> tail -f deploy.log
+>
+> # 方式二：tmux 会话中运行（推荐）
+> tmux new -s deploy
+> cd /opt/GGALogPlatform && bash deploy.sh
+> # Ctrl+B 然后按 D 分离会话，之后用 tmux attach -t deploy 重新连接
+> ```
 
 或手动执行：
 
