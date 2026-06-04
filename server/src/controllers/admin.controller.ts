@@ -156,6 +156,8 @@ export const getUserDatasets = async (request: FastifyRequest, reply: FastifyRep
           fileSize: true,
           date: true,
           recordCount: true,
+          viewCount: true,
+          downloadCount: true,
           createdAt: true
         }
       }),

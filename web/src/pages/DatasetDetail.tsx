@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Card, Descriptions, Button, Spin, message } from 'antd'
+import { Card, Descriptions, Button, Spin, message, Input } from 'antd'
 import { ArrowLeftOutlined, DownloadOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dataService } from '../services/data.service'
@@ -82,9 +82,12 @@ const DatasetDetail = () => {
       </Card>
 
       <Card title="数据预览" style={{ marginTop: 16 }}>
-        <pre style={{ background: '#f5f5f5', padding: 16, borderRadius: 4, maxHeight: 400, overflow: 'auto' }}>
-          {dataset.preview || '无预览数据'}
-        </pre>
+        <Input.TextArea
+          value={dataset.preview || '无预览数据'}
+          readOnly
+          autoSize={{ minRows: 10, maxRows: 30 }}
+          style={{ fontFamily: 'monospace', fontSize: 13, background: '#f5f5f5' }}
+        />
       </Card>
     </div>
   )

@@ -139,6 +139,8 @@ export const getDatasets = async (request: FastifyRequest, reply: FastifyReply) 
           fileSize: true,
           date: true,
           recordCount: true,
+          viewCount: true,
+          downloadCount: true,
           createdAt: true
         }
       }),
@@ -154,6 +156,8 @@ export const getDatasets = async (request: FastifyRequest, reply: FastifyReply) 
           fileSize: d.fileSize,
           date: d.date,
           recordCount: d.recordCount,
+          viewCount: d.viewCount,
+          downloadCount: d.downloadCount,
           uploadTime: d.createdAt
         })),
         pagination: {
@@ -188,14 +192,26 @@ export const getDatasetDetail = async (request: FastifyRequest, reply: FastifyRe
       });
     }
 
+    const MAX_PREVIEW_SIZE = 5 * 1024 * 1024; // 5MB
     let preview = '';
     try {
-      const content = await fs.readFile(dataset.filePath, 'utf-8');
-      const lines = content.split('\n').filter(line => line.includes('$GPGGA') || line.includes('$GNGGA'));
-      preview = lines.slice(0, 10).join('\n');
+      if (dataset.fileSize > MAX_PREVIEW_SIZE) {
+        const content = await fs.readFile(dataset.filePath, 'utf-8');
+        const lines = content.split('\n').filter(line => line.includes('$GPGGA') || line.includes('$GNGGA'));
+        preview = lines.slice(0, 1000).join('\n') + '\n\n... 文件过大，仅显示前10条预览';
+      } else {
+        const content = await fs.readFile(dataset.filePath, 'utf-8');
+        const lines = content.split('\n').filter(line => line.includes('$GPGGA') || line.includes('$GNGGA'));
+        preview = lines.join('\n');
+      }
     } catch (err) {
       preview = '无法读取文件内容';
     }
+
+    await prisma.dataset.update({
+      where: { id },
+      data: { viewCount: { increment: 1 } }
+    });
 
     return reply.send({
       success: true,
@@ -239,6 +255,11 @@ export const downloadDataset = async (request: FastifyRequest, reply: FastifyRep
     }
 
     const fileContent = await fs.readFile(dataset.filePath);
+
+    await prisma.dataset.update({
+      where: { id },
+      data: { downloadCount: { increment: 1 } }
+    });
 
     reply.header('Content-Type', 'application/octet-stream');
     reply.header('Content-Disposition', `attachment; filename="${encodeURIComponent(dataset.fileName)}"`);

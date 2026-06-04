@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Table, Button, DatePicker, Space, Card, Popconfirm, message } from 'antd'
+import { Table, Button, DatePicker, Space, Card, Popconfirm, message, Tag } from 'antd'
 import { EyeOutlined, DownloadOutlined, ReloadOutlined, DeleteOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dataService } from '../services/data.service'
@@ -45,6 +45,7 @@ const DatasetList = () => {
   const handleDownload = async (id: string, fileName: string) => {
     try {
       await dataService.downloadDataset(id, fileName)
+      loadDatasets()
     } catch (error) {
       console.error('Failed to download:', error)
     }
@@ -73,7 +74,15 @@ const DatasetList = () => {
     {
       title: '文件名',
       dataIndex: 'fileName',
-      key: 'fileName'
+      key: 'fileName',
+      render: (name: string, record: any) => (
+        <Space>
+          {name}
+          {(record.viewCount === 0 && record.downloadCount === 0) && (
+            <Tag color="green">新</Tag>
+          )}
+        </Space>
+      )
     },
     {
       title: '数据时间',
