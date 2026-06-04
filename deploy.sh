@@ -2,6 +2,15 @@
 
 set -e
 
+cleanup() {
+  echo ""
+  echo "脚本被中断！请检查服务状态: docker compose --env-file .env.production.local ps"
+  echo "如需恢复服务: docker compose --env-file .env.production.local up -d"
+  exit 130
+}
+
+trap cleanup INT TERM
+
 echo "=== GGA数据管理平台 - 部署脚本 ==="
 
 if [ ! -f .env.production.local ]; then
