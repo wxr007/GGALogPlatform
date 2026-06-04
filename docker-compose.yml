@@ -29,6 +29,9 @@ services:
       - UPLOAD_DIR=/app/uploads
       - MAX_FILE_SIZE=52428800
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123456}
     volumes:
       - uploads_data:/app/uploads
     depends_on:
