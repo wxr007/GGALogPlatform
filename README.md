@@ -93,35 +93,27 @@ vim .env.production.local
 
 ### 第四步：首次部署
 
-**若服务器性能较低**（1核2G），推荐使用预构建镜像方案，避免在服务器上编译：
-
-> 在本地开发机（性能较好的电脑）上执行：
-> ```bash
-> bash build.sh
-> ```
-> 这会在本地构建镜像并推送到 Docker Hub，服务器只需拉取即可。
-
-然后在服务器上：
-
 ```bash
 bash deploy.sh
 ```
 
-**服务器性能足够**的情况下，也可手动完成首次部署：
+`deploy.sh` 默认在服务器本地构建镜像。如果服务器性能较低，可使用预构建镜像模式：
 
 ```bash
-# 1. 构建镜像
-docker compose --env-file .env.production.local build --no-cache
+# 低配服务器：先在本机构建并推送到 Docker Hub
+bash build.sh
 
-# 2. 启动所有服务（包含数据库）
-docker compose --env-file .env.production.local up -d
-
-# 3. 执行数据库迁移
-docker compose --env-file .env.production.local run --rm server npx prisma migrate deploy
-
-# 4. 重启后端服务使迁移生效
-docker compose restart server
+# 服务器上拉取预构建镜像
+bash deploy.sh pull
 ```
+
+> 手动首次部署（可选）：
+> ```bash
+> docker compose --env-file .env.production.local build --no-cache
+> docker compose --env-file .env.production.local up -d
+> docker compose --env-file .env.production.local run --rm server npx prisma migrate deploy
+> docker compose restart server
+> ```
 
 ### 第五步：配置反向代理（可选）
 
@@ -133,23 +125,27 @@ docker compose restart server
 
 ### 日常更新
 
-每次代码更新后，在本地开发机构建并推送镜像：
-
-```bash
-# 本地执行（构建 + 推送到 Docker Hub）
-bash build.sh
-```
-
-然后在服务器上部署：
+**方式一：服务器本地构建（默认，适合性能较好的服务器）**
 
 ```bash
 cd /opt/GGALogPlatform
 bash deploy.sh
 ```
 
-> **部署流程说明**：`deploy.sh` 会 `git pull` 拉取代码（含 `docker-compose.deploy.yml`），然后 `docker compose pull` 拉取预构建镜像，再重启服务。服务器不再执行编译，1核2G 机器也能快速完成。
+**方式二：预构建镜像（适合低配服务器，需本机先推送镜像）**
 
-> **注意**：部署过程较长，SSH 断开会导致脚本中断、服务停止。建议使用 `nohup` 或 `tmux` 防止中断：
+本机先构建推送：
+```bash
+bash build.sh
+```
+
+服务器拉取部署：
+```bash
+cd /opt/GGALogPlatform
+bash deploy.sh pull
+```
+
+> **注意**：`build` 模式编译时间较长，SSH 断开会导致脚本中断。建议使用 `nohup` 或 `tmux` 防止中断：
 > ```bash
 > # 方式一：nohup 后台运行
 > cd /opt/GGALogPlatform
