@@ -136,6 +136,18 @@ bash deploy.sh
 
 本机先构建推送：
 ```bash
+# 首次使用需登录 Docker Hub
+docker login -u wxr007zc
+
+# 构建并推送（Linux/Mac 可用 build.sh 一键完成）
+docker build -t wxr007zc/gga-platform-server:latest -f server/Dockerfile .
+docker build -t wxr007zc/gga-platform-web:latest -f web/Dockerfile .
+docker push wxr007zc/gga-platform-server:latest
+docker push wxr007zc/gga-platform-web:latest
+```
+
+或使用脚本一键完成（需先 `docker login`）：
+```bash
 bash build.sh
 ```
 
