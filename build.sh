@@ -2,7 +2,7 @@
 
 set -e
 
-DOCKER_REGISTRY="${DOCKER_REGISTRY:-wxr007}"
+DOCKER_REGISTRY="${DOCKER_REGISTRY:-wxr007zc}"
 
 echo "=== 本地构建并推送镜像 ==="
 echo "Registry: ${DOCKER_REGISTRY}"
