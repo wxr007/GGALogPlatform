@@ -195,14 +195,12 @@ export const getDatasetDetail = async (request: FastifyRequest, reply: FastifyRe
     const MAX_PREVIEW_SIZE = 5 * 1024 * 1024; // 5MB
     let preview = '';
     try {
+      const content = await fs.readFile(dataset.filePath, 'utf-8');
       if (dataset.fileSize > MAX_PREVIEW_SIZE) {
-        const content = await fs.readFile(dataset.filePath, 'utf-8');
-        const lines = content.split('\n').filter(line => line.includes('$GPGGA') || line.includes('$GNGGA'));
-        preview = lines.slice(0, 1000).join('\n') + '\n\n... 文件过大，仅显示前10条预览';
+        const lines = content.split('\n');
+        preview = lines.slice(0, 1000).join('\n') + '\n\n... 文件过大，仅显示前1000行预览';
       } else {
-        const content = await fs.readFile(dataset.filePath, 'utf-8');
-        const lines = content.split('\n').filter(line => line.includes('$GPGGA') || line.includes('$GNGGA'));
-        preview = lines.join('\n');
+        preview = content;
       }
     } catch (err) {
       preview = '无法读取文件内容';
