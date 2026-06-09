@@ -2,7 +2,7 @@
 
 set -e
 
-MODE="${1:-build}"
+MODE="${1:-pull}"
 
 if [ "$MODE" != "build" ] && [ "$MODE" != "pull" ]; then
   echo "用法: bash deploy.sh [build|pull]"
