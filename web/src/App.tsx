@@ -7,6 +7,7 @@ import DatasetList from './pages/DatasetList'
 import DatasetDetail from './pages/DatasetDetail'
 import Admin from './pages/Admin'
 import AdminUserDatasets from './pages/AdminUserDatasets'
+import AdminDatasetDetail from './pages/AdminDatasetDetail'
 import Layout from './components/Layout'
 import { useAuthStore } from './store/auth.store'
 
@@ -41,6 +42,7 @@ function App() {
         <Route path="datasets/:id" element={<DatasetDetail />} />
         <Route path="admin" element={<Admin />} />
         <Route path="admin/users/:id/datasets" element={<AdminUserDatasets />} />
+        <Route path="admin/datasets/:id" element={<AdminDatasetDetail />} />
       </Route>
       <Route path="*" element={<Navigate to="/login" />} />
     </Routes>

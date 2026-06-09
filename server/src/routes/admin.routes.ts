@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { getUsers, setAdmin, getUserDatasets } from '../controllers/admin.controller';
+import { getUsers, setAdmin, getUserDatasets, getAdminDatasetDetail, downloadAdminDataset } from '../controllers/admin.controller';
 
 export const adminRoutes = async (fastify: FastifyInstance) => {
   fastify.get('/users', {
@@ -15,5 +15,15 @@ export const adminRoutes = async (fastify: FastifyInstance) => {
   fastify.get('/users/:id/datasets', {
     preHandler: [fastify.authenticate, fastify.requireAdmin],
     handler: getUserDatasets
+  });
+
+  fastify.get('/datasets/:id', {
+    preHandler: [fastify.authenticate, fastify.requireAdmin],
+    handler: getAdminDatasetDetail
+  });
+
+  fastify.get('/datasets/:id/download', {
+    preHandler: [fastify.authenticate, fastify.requireAdmin],
+    handler: downloadAdminDataset
   });
 };

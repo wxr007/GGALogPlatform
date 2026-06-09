@@ -1,4 +1,5 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
+import fs from 'fs/promises';
 import { prisma } from '../config/database';
 
 export const getUsers = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -63,6 +64,82 @@ export const getUsers = async (request: FastifyRequest, reply: FastifyReply) => 
         }
       }
     });
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getAdminDatasetDetail = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const { id } = request.params as { id: string };
+
+    const dataset = await prisma.dataset.findUnique({
+      where: { id }
+    });
+
+    if (!dataset) {
+      return reply.code(404).send({
+        success: false,
+        error: { code: 'DATASET_NOT_FOUND', message: '数据集不存在' }
+      });
+    }
+
+    const MAX_PREVIEW_SIZE = 5 * 1024 * 1024;
+    let preview = '';
+    try {
+      const content = await fs.readFile(dataset.filePath, 'utf-8');
+      if (dataset.fileSize > MAX_PREVIEW_SIZE) {
+        const lines = content.split('\n');
+        preview = lines.slice(0, 1000).join('\n') + '\n\n... 文件过大，仅显示前1000行预览';
+      } else {
+        preview = content;
+      }
+    } catch {
+      preview = '无法读取文件内容';
+    }
+
+    return reply.send({
+      success: true,
+      data: {
+        id: dataset.id,
+        fileName: dataset.fileName,
+        fileSize: dataset.fileSize,
+        date: dataset.date,
+        recordCount: dataset.recordCount,
+        uploadTime: dataset.createdAt,
+        deviceInfo: {
+          deviceId: dataset.deviceId,
+          model: dataset.deviceModel,
+          firmware: dataset.deviceFirmware
+        },
+        preview
+      }
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const downloadAdminDataset = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const { id } = request.params as { id: string };
+
+    const dataset = await prisma.dataset.findUnique({
+      where: { id }
+    });
+
+    if (!dataset) {
+      return reply.code(404).send({
+        success: false,
+        error: { code: 'DATASET_NOT_FOUND', message: '数据集不存在' }
+      });
+    }
+
+    const fileContent = await fs.readFile(dataset.filePath);
+    reply.header('Content-Type', 'application/octet-stream');
+    reply.header('Content-Disposition', `attachment; filename="${encodeURIComponent(dataset.fileName)}"`);
+    reply.header('Content-Length', dataset.fileSize);
+    return reply.send(fileContent);
   } catch (error) {
     throw error;
   }

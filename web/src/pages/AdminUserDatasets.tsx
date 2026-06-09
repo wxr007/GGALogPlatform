@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Table, Card, Button, DatePicker, Space, Spin } from 'antd'
-import { ArrowLeftOutlined } from '@ant-design/icons'
+import { Table, Card, Button, DatePicker, Space, Spin, message } from 'antd'
+import { ArrowLeftOutlined, EyeOutlined, DownloadOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { adminService } from '../services/admin.service'
 
@@ -46,6 +46,14 @@ const AdminUserDatasets = () => {
     loadDatasets()
   }, [loadDatasets])
 
+  const handleDownload = async (dataset: any) => {
+    try {
+      await adminService.downloadDataset(dataset.id, dataset.fileName)
+    } catch (error) {
+      message.error('下载失败')
+    }
+  }
+
   const columns = [
     {
       title: '文件名',
@@ -78,6 +86,28 @@ const AdminUserDatasets = () => {
       dataIndex: 'uploadTime',
       key: 'uploadTime',
       render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm')
+    },
+    {
+      title: '操作',
+      key: 'action',
+      render: (_: any, record: any) => (
+        <Space>
+          <Button
+            type="link"
+            icon={<EyeOutlined />}
+            onClick={() => navigate(`/admin/datasets/${record.id}`)}
+          >
+            查看
+          </Button>
+          <Button
+            type="link"
+            icon={<DownloadOutlined />}
+            onClick={() => handleDownload(record)}
+          >
+            下载
+          </Button>
+        </Space>
+      )
     }
   ]
 
