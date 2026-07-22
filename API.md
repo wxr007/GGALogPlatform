@@ -322,6 +322,7 @@ Content-Type: multipart/form-data
 | dateTime | string | 否 | 数据时间，ISO 8601格式，默认为当前时间 |
 | deviceId | string | 否 | 设备ID |
 | deviceModel | string | 否 | 设备型号 |
+| fileType | string | 否 | 文件类型，可选值：RawRover、RawBase、LogRover、LogBase，默认为RawRover |
 
 **cURL示例**:
 ```bash
@@ -330,7 +331,8 @@ curl -X POST http://your-server-domain/api/data/upload \
   -F "file=@/path/to/data.log" \
   -F "dateTime=2024-01-15T10:30:00Z" \
   -F "deviceId=device-001" \
-  -F "deviceModel=Model-X"
+  -F "deviceModel=Model-X" \
+  -F "fileType=RawRover"
 ```
 
 **成功响应** (201):
@@ -342,6 +344,7 @@ curl -X POST http://your-server-domain/api/data/upload \
     "fileName": "data.log",
     "fileSize": 12345,
     "recordCount": 100,
+    "fileType": "RawRover",
     "uploadTime": "2024-01-15T10:30:00.000Z"
   }
 }
@@ -381,6 +384,7 @@ Authorization: Bearer <token>
 | endDate | string | 否 | 结束日期，格式：YYYY-MM-DD |
 | sort | string | 否 | 排序字段：date 或 createdAt，默认createdAt |
 | order | string | 否 | 排序方向：asc 或 desc，默认desc |
+| fileType | string | 否 | 按文件类型筛选：RawRover、RawBase、LogRover、LogBase |
 
 **请求示例**:
 ```
@@ -399,6 +403,7 @@ GET /api/data/datasets?page=1&limit=20&startDate=2024-01-01&endDate=2024-01-31&s
         "fileSize": 12345,
         "date": "2024-01-15T00:00:00.000Z",
         "recordCount": 100,
+        "fileType": "RawRover",
         "uploadTime": "2024-01-15T10:30:00.000Z"
       }
     ],
@@ -482,6 +487,7 @@ Content-Type: application/json
         "datasetId": "uuid-string",
         "date": "2024-01-15T00:00:00.000Z",
         "fileSize": 12345,
+        "fileType": "RawRover",
         "uploadedAt": "2024-01-15T10:30:00.000Z"
       }
     ],
@@ -526,6 +532,7 @@ Authorization: Bearer <token>
     "fileSize": 12345,
     "date": "2024-01-15T00:00:00.000Z",
     "recordCount": 100,
+    "fileType": "RawRover",
     "uploadTime": "2024-01-15T10:30:00.000Z",
     "deviceInfo": {
       "deviceId": "device-001",
@@ -590,9 +597,64 @@ Authorization: Bearer <token>
         "fileName": "data.gga",
         "fileSize": 12345,
         "date": "2024-01-15T00:00:00.000Z",
+        "fileType": "RawRover",
         "uploadTime": "2024-01-15T10:30:00.000Z"
       }
     ]
+  }
+}
+```
+
+---
+
+### 12. 管理员修改文件类型
+
+**接口地址**: `PUT /api/admin/datasets/{id}/fileType`
+
+**权限**: 需要管理员权限
+
+**请求头**:
+```
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+**路径参数**:
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | string | 是 | 数据集ID |
+
+**请求体**:
+```json
+{
+  "fileType": "LogRover"
+}
+```
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| fileType | string | 是 | 文件类型：RawRover、RawBase、LogRover、LogBase |
+
+**成功响应** (200):
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid-string",
+    "fileType": "LogRover"
+  },
+  "message": "文件类型已更新"
+}
+```
+
+**失败响应**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_FILE_TYPE",
+    "message": "无效的文件类型，可选值：RawRover、RawBase、LogRover、LogBase"
   }
 }
 ```
@@ -619,6 +681,7 @@ Authorization: Bearer <token>
 | FILE_INVALID_TYPE | 400 | 文件类型无效，只支持.log格式 |
 | DATASET_NOT_FOUND | 404 | 数据集不存在 |
 | ACCESS_DENIED | 403 | 无权访问 |
+| INVALID_FILE_TYPE | 400 | 无效的文件类型 |
 | INTERNAL_ERROR | 500 | 服务器内部错误 |
 
 ---

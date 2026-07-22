@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import { prisma } from '../config/database';
 import { config } from '../config/app';
+import { FileType } from '@prisma/client';
 
 export const uploadData = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
@@ -19,6 +20,7 @@ export const uploadData = async (request: FastifyRequest, reply: FastifyReply) =
     let dateTimeStr = new Date().toISOString();
     let deviceId: string | undefined;
     let deviceModel: string | undefined;
+    let fileType: FileType = 'RawRover';
     
     for await (const part of parts) {
       if (part.type === 'file') {
@@ -36,6 +38,11 @@ export const uploadData = async (request: FastifyRequest, reply: FastifyReply) =
           deviceId = part.value as string;
         } else if (part.fieldname === 'deviceModel') {
           deviceModel = part.value as string;
+        } else if (part.fieldname === 'fileType') {
+          const ft = part.value as string;
+          if (ft === 'RawRover' || ft === 'RawBase' || ft === 'LogRover' || ft === 'LogBase') {
+            fileType = ft as FileType;
+          }
         }
       }
     }
@@ -87,6 +94,7 @@ export const uploadData = async (request: FastifyRequest, reply: FastifyReply) =
         recordCount,
         deviceId,
         deviceModel,
+        fileType,
         uploadStatus: 'completed'
       }
     });
@@ -98,6 +106,7 @@ export const uploadData = async (request: FastifyRequest, reply: FastifyReply) =
         fileName: filePart.filename,
         fileSize: fileBuffer.length,
         recordCount,
+        fileType: dataset.fileType,
         uploadTime: dataset.createdAt
       }
     });
@@ -124,6 +133,10 @@ export const getDatasets = async (request: FastifyRequest, reply: FastifyReply) 
       if (query.endDate) where.date.lte = new Date(query.endDate);
     }
 
+    if (query.fileType) {
+      where.fileType = query.fileType;
+    }
+
     const sortField = query.sort === 'date' ? 'date' : 'createdAt';
     const sortOrder = query.order === 'asc' ? 'asc' : 'desc';
 
@@ -139,6 +152,7 @@ export const getDatasets = async (request: FastifyRequest, reply: FastifyReply) 
           fileSize: true,
           date: true,
           recordCount: true,
+          fileType: true,
           viewCount: true,
           downloadCount: true,
           createdAt: true
@@ -156,6 +170,7 @@ export const getDatasets = async (request: FastifyRequest, reply: FastifyReply) 
           fileSize: d.fileSize,
           date: d.date,
           recordCount: d.recordCount,
+          fileType: d.fileType,
           viewCount: d.viewCount,
           downloadCount: d.downloadCount,
           uploadTime: d.createdAt
@@ -219,6 +234,7 @@ export const getDatasetDetail = async (request: FastifyRequest, reply: FastifyRe
         fileSize: dataset.fileSize,
         date: dataset.date,
         recordCount: dataset.recordCount,
+        fileType: dataset.fileType,
         uploadTime: dataset.createdAt,
         deviceInfo: {
           deviceId: dataset.deviceId,
@@ -334,6 +350,7 @@ export const checkFilesExist = async (request: FastifyRequest, reply: FastifyRep
         id: true,
         date: true,
         fileSize: true,
+        fileType: true,
         createdAt: true
       }
     });
@@ -349,6 +366,7 @@ export const checkFilesExist = async (request: FastifyRequest, reply: FastifyRep
           datasetId: f.id,
           date: f.date,
           fileSize: f.fileSize,
+          fileType: f.fileType,
           uploadedAt: f.createdAt
         })),
         notUploaded
@@ -390,6 +408,7 @@ export const getStats = async (request: FastifyRequest, reply: FastifyReply) => 
         fileName: true,
         fileSize: true,
         date: true,
+        fileType: true,
         createdAt: true
       }
     });
@@ -409,6 +428,7 @@ export const getStats = async (request: FastifyRequest, reply: FastifyReply) => 
           fileName: d.fileName,
           fileSize: d.fileSize,
           date: d.date,
+          fileType: d.fileType,
           uploadTime: d.createdAt
         }))
       }

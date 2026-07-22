@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Table, Card, Button, DatePicker, Space, Spin, message } from 'antd'
+import { Table, Card, Button, DatePicker, Space, Spin, message, Select, Tag } from 'antd'
 import { ArrowLeftOutlined, EyeOutlined, DownloadOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { adminService } from '../services/admin.service'
@@ -15,6 +15,22 @@ const AdminUserDatasets = () => {
   const [datasets, setDatasets] = useState<any[]>([])
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20, total: 0 })
   const [dateRange, setDateRange] = useState<[any, any] | null>(null)
+  const [fileType, setFileType] = useState<string | undefined>(undefined)
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
+
+  const fileTypeColors: Record<string, string> = {
+    RawRover: 'blue',
+    RawBase: 'green',
+    LogRover: 'orange',
+    LogBase: 'purple'
+  }
+
+  const fileTypeOptions = [
+    { label: 'RawRover', value: 'RawRover' },
+    { label: 'RawBase', value: 'RawBase' },
+    { label: 'LogRover', value: 'LogRover' },
+    { label: 'LogBase', value: 'LogBase' }
+  ]
 
   const loadDatasets = useCallback(async () => {
     if (!id) return
@@ -28,6 +44,9 @@ const AdminUserDatasets = () => {
         params.startDate = dateRange[0].format('YYYY-MM-DD')
         params.endDate = dateRange[1].format('YYYY-MM-DD')
       }
+      if (fileType) {
+        params.fileType = fileType
+      }
       const response = await adminService.getUserDatasets(id, params)
       setUser(response.data.user)
       setDatasets(response.data.datasets)
@@ -40,7 +59,7 @@ const AdminUserDatasets = () => {
     } finally {
       setLoading(false)
     }
-  }, [id, pagination.current, pagination.pageSize, dateRange])
+  }, [id, pagination.current, pagination.pageSize, dateRange, fileType])
 
   useEffect(() => {
     loadDatasets()
@@ -54,11 +73,47 @@ const AdminUserDatasets = () => {
     }
   }
 
+  const handleUpdateFileType = async (datasetId: string, newType: string) => {
+    try {
+      setUpdatingId(datasetId)
+      await adminService.updateDatasetFileType(datasetId, newType)
+      setDatasets(prev =>
+        prev.map(d => d.id === datasetId ? { ...d, fileType: newType } : d)
+      )
+      message.success('文件类型已更新')
+    } catch (error) {
+      message.error('更新文件类型失败')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
   const columns = [
     {
       title: '文件名',
       dataIndex: 'fileName',
       key: 'fileName'
+    },
+    {
+      title: '文件类型',
+      dataIndex: 'fileType',
+      key: 'fileType',
+      render: (type: string, record: any) => (
+        <Select
+          value={type}
+          loading={updatingId === record.id}
+          style={{ width: 140 }}
+          size="small"
+          onChange={(value) => handleUpdateFileType(record.id, value)}
+          options={fileTypeOptions}
+          optionRender={(option) => (
+            <Tag color={fileTypeColors[option.value as string]}>{option.label}</Tag>
+          )}
+          labelRender={(props) => (
+            <Tag color={fileTypeColors[props.value as string]}>{props.label}</Tag>
+          )}
+        />
+      )
     },
     {
       title: '数据时间',
@@ -131,6 +186,20 @@ const AdminUserDatasets = () => {
               setDateRange(dates ? [dates[0], dates[1]] : null)
               setPagination(prev => ({ ...prev, current: 1 }))
             }}
+          />
+          <Select
+            placeholder="文件类型"
+            style={{ width: 150 }}
+            allowClear
+            value={fileType}
+            onChange={(value) => {
+              setFileType(value)
+              setPagination(prev => ({ ...prev, current: 1 }))
+            }}
+            options={fileTypeOptions}
+            optionRender={(option) => (
+              <Tag color={fileTypeColors[option.value as string]}>{option.label}</Tag>
+            )}
           />
         </Space>
         <Table

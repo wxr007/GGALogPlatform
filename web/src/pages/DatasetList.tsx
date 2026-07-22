@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Table, Button, DatePicker, Space, Card, Popconfirm, message, Tag } from 'antd'
+import { Table, Button, DatePicker, Space, Card, Popconfirm, message, Tag, Select } from 'antd'
 import { EyeOutlined, DownloadOutlined, ReloadOutlined, DeleteOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dataService } from '../services/data.service'
@@ -13,10 +13,18 @@ const DatasetList = () => {
   const [datasets, setDatasets] = useState([])
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20, total: 0 })
   const [dateRange, setDateRange] = useState<[any, any] | null>(null)
+  const [fileType, setFileType] = useState<string | undefined>(undefined)
+
+  const fileTypeColors: Record<string, string> = {
+    RawRover: 'blue',
+    RawBase: 'green',
+    LogRover: 'orange',
+    LogBase: 'purple'
+  }
 
   useEffect(() => {
     loadDatasets()
-  }, [pagination.current, pagination.pageSize, dateRange])
+  }, [pagination.current, pagination.pageSize, dateRange, fileType])
 
   const loadDatasets = async () => {
     try {
@@ -28,6 +36,9 @@ const DatasetList = () => {
       if (dateRange) {
         params.startDate = dateRange[0].format('YYYY-MM-DD')
         params.endDate = dateRange[1].format('YYYY-MM-DD')
+      }
+      if (fileType) {
+        params.fileType = fileType
       }
       const response = await dataService.getDatasets(params)
       setDatasets(response.data.datasets)
@@ -82,6 +93,14 @@ const DatasetList = () => {
             <Tag color="green">新</Tag>
           )}
         </Space>
+      )
+    },
+    {
+      title: '文件类型',
+      dataIndex: 'fileType',
+      key: 'fileType',
+      render: (type: string) => (
+        <Tag color={fileTypeColors[type] || 'default'}>{type}</Tag>
       )
     },
     {
@@ -156,6 +175,22 @@ const DatasetList = () => {
               setDateRange(dates as [any, any] | null)
               setPagination(prev => ({ ...prev, current: 1 }))
             }}
+          />
+          <Select
+            placeholder="文件类型"
+            style={{ width: 140 }}
+            allowClear
+            value={fileType}
+            onChange={(value) => {
+              setFileType(value)
+              setPagination(prev => ({ ...prev, current: 1 }))
+            }}
+            options={[
+              { label: 'RawRover', value: 'RawRover' },
+              { label: 'RawBase', value: 'RawBase' },
+              { label: 'LogRover', value: 'LogRover' },
+              { label: 'LogBase', value: 'LogBase' }
+            ]}
           />
           <Button icon={<ReloadOutlined />} onClick={loadDatasets}>
             刷新

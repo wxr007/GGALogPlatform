@@ -69,6 +69,51 @@ export const getUsers = async (request: FastifyRequest, reply: FastifyReply) => 
   }
 };
 
+export const updateDatasetFileType = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const { id } = request.params as { id: string };
+    const { fileType } = request.body as { fileType: string };
+
+    const validTypes = ['RawRover', 'RawBase', 'LogRover', 'LogBase'];
+    if (!validTypes.includes(fileType)) {
+      return reply.code(400).send({
+        success: false,
+        error: {
+          code: 'INVALID_FILE_TYPE',
+          message: '无效的文件类型，可选值：RawRover、RawBase、LogRover、LogBase'
+        }
+      });
+    }
+
+    const dataset = await prisma.dataset.findUnique({
+      where: { id }
+    });
+
+    if (!dataset) {
+      return reply.code(404).send({
+        success: false,
+        error: { code: 'DATASET_NOT_FOUND', message: '数据集不存在' }
+      });
+    }
+
+    const updated = await prisma.dataset.update({
+      where: { id },
+      data: { fileType: fileType as any }
+    });
+
+    return reply.send({
+      success: true,
+      data: {
+        id: updated.id,
+        fileType: updated.fileType
+      },
+      message: '文件类型已更新'
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const getAdminDatasetDetail = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const { id } = request.params as { id: string };
@@ -106,6 +151,7 @@ export const getAdminDatasetDetail = async (request: FastifyRequest, reply: Fast
         fileSize: dataset.fileSize,
         date: dataset.date,
         recordCount: dataset.recordCount,
+        fileType: dataset.fileType,
         uploadTime: dataset.createdAt,
         deviceInfo: {
           deviceId: dataset.deviceId,
@@ -218,6 +264,10 @@ export const getUserDatasets = async (request: FastifyRequest, reply: FastifyRep
       if (query.endDate) where.date.lte = new Date(query.endDate);
     }
 
+    if (query.fileType) {
+      where.fileType = query.fileType;
+    }
+
     const sortField = query.sort === 'date' ? 'date' : 'createdAt';
     const sortOrder = query.order === 'asc' ? 'asc' : 'desc';
 
@@ -233,6 +283,7 @@ export const getUserDatasets = async (request: FastifyRequest, reply: FastifyRep
           fileSize: true,
           date: true,
           recordCount: true,
+          fileType: true,
           viewCount: true,
           downloadCount: true,
           createdAt: true
@@ -251,6 +302,7 @@ export const getUserDatasets = async (request: FastifyRequest, reply: FastifyRep
           fileSize: d.fileSize,
           date: d.date,
           recordCount: d.recordCount,
+          fileType: d.fileType,
           uploadTime: d.createdAt
         })),
         pagination: {

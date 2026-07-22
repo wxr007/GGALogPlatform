@@ -32,5 +32,10 @@ export const adminService = {
     document.body.appendChild(link);
     link.click();
     link.remove();
+  },
+
+  updateDatasetFileType: async (id: string, fileType: string) => {
+    const response = await api.put(`/admin/datasets/${id}/fileType`, { fileType });
+    return response.data;
   }
 };
