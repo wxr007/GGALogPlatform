@@ -78,8 +78,8 @@ cd GGALogPlatform
 ### 第三步：配置环境变量
 
 ```bash
-cp .env.production .env.production.local
-vim .env.production.local
+cp .env.production .env
+vim .env
 ```
 
 修改以下配置：
@@ -90,30 +90,15 @@ vim .env.production.local
 | `JWT_SECRET` | JWT密钥 | `your-random-secret-key` |
 | `WEB_PORT` | Web服务端口 | `8080` |
 | `ALLOWED_ORIGINS` | 允许访问的域名 | `http://your-domain.com:8080` |
+| `GHCR_TOKEN` | GitHub Container Registry Token（可选，镜像为Public时不需要） | `ghp_xxxx` |
 
-### 第四步：首次部署
+### 第四步：部署
 
 ```bash
 bash deploy.sh
 ```
 
-`deploy.sh` 默认在服务器本地构建镜像。如果服务器性能较低，可使用预构建镜像模式：
-
-```bash
-# 低配服务器：先在本机构建并推送到 Docker Hub
-bash build.sh
-
-# 服务器上拉取预构建镜像
-bash deploy.sh pull
-```
-
-> 手动首次部署（可选）：
-> ```bash
-> docker compose --env-file .env.production.local build --no-cache
-> docker compose --env-file .env.production.local up -d
-> docker compose --env-file .env.production.local run --rm server npx prisma migrate deploy
-> docker compose restart server
-> ```
+脚本会自动拉取 GitHub Actions 构建的最新镜像并执行数据库迁移。
 
 ### 第五步：配置反向代理（可选）
 
@@ -125,49 +110,20 @@ bash deploy.sh pull
 
 ### 日常更新
 
-**方式一：服务器本地构建（默认，适合性能较好的服务器）**
-
 ```bash
 cd /opt/GGALogPlatform
 bash deploy.sh
 ```
 
-**方式二：预构建镜像（推荐，GitHub Actions 自动构建）**
+镜像由 GitHub Actions 自动构建推送到 GHCR，无需在服务器本地构建。
 
-镜像由 GitHub Actions 自动构建并推送到 GitHub Container Registry (ghcr.io)。
-
-服务器拉取部署：
-```bash
-cd /opt/GGALogPlatform
-bash deploy.sh pull
-```
-
-> 本地手动构建推送（需先登录 GHCR）：
+> 如果服务器 SSH 容易断开，建议使用 `nohup` 或 `tmux`：
 > ```bash
-> echo $GITHUB_TOKEN | docker login ghcr.io -u wxr007 --password-stdin
-> bash build.sh
-> ```
-
-> **注意**：`build` 模式编译时间较长，SSH 断开会导致脚本中断。建议使用 `nohup` 或 `tmux` 防止中断：
-> ```bash
-> # 方式一：nohup 后台运行
-> cd /opt/GGALogPlatform
-> nohup bash deploy.sh > deploy.log 2>&1 &
-> tail -f deploy.log
->
-> # 方式二：tmux 会话中运行（推荐）
+> # tmux 会话中运行（推荐）
 > tmux new -s deploy
 > cd /opt/GGALogPlatform && bash deploy.sh
 > # Ctrl+B 然后按 D 分离会话，之后用 tmux attach -t deploy 重新连接
 > ```
-
-或手动执行：
-
-```bash
-cd /opt/GGALogPlatform
-git pull origin master
-docker compose --env-file .env.production.local up -d --build
-```
 
 ### 常用运维命令
 
@@ -225,9 +181,11 @@ docker compose down
 │   ├── nginx.conf       # Nginx配置
 │   ├── Dockerfile       # 前端Docker镜像
 │   └── .dockerignore    # Docker构建忽略文件
-├── docker-compose.yml   # Docker编排配置
+├── docker-compose.yml   # Docker编排配置（本地构建）
+├── docker-compose.deploy.yml # Docker编排配置（预构建镜像）
 ├── .env.production      # 生产环境变量模板
 ├── deploy.sh            # 一键部署脚本
+├── build.sh             # 本地构建推送脚本
 ├── API.md               # 移动端API文档
 └── architecture.md      # 架构文档
 ```
