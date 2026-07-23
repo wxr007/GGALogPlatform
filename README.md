@@ -132,30 +132,21 @@ cd /opt/GGALogPlatform
 bash deploy.sh
 ```
 
-**方式二：预构建镜像（适合低配服务器，需本机先推送镜像）**
+**方式二：预构建镜像（推荐，GitHub Actions 自动构建）**
 
-本机先构建推送：
-```bash
-# 首次使用需登录 Docker Hub
-docker login -u wxr007zc
-
-# 构建并推送（Linux/Mac 可用 build.sh 一键完成）
-docker build -t wxr007zc/gga-platform-server:latest -f server/Dockerfile .
-docker build -t wxr007zc/gga-platform-web:latest -f web/Dockerfile .
-docker push wxr007zc/gga-platform-server:latest
-docker push wxr007zc/gga-platform-web:latest
-```
-
-或使用脚本一键完成（需先 `docker login`）：
-```bash
-bash build.sh
-```
+镜像由 GitHub Actions 自动构建并推送到 GitHub Container Registry (ghcr.io)。
 
 服务器拉取部署：
 ```bash
 cd /opt/GGALogPlatform
 bash deploy.sh pull
 ```
+
+> 本地手动构建推送（需先登录 GHCR）：
+> ```bash
+> echo $GITHUB_TOKEN | docker login ghcr.io -u wxr007 --password-stdin
+> bash build.sh
+> ```
 
 > **注意**：`build` 模式编译时间较长，SSH 断开会导致脚本中断。建议使用 `nohup` 或 `tmux` 防止中断：
 > ```bash

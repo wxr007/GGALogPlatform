@@ -15,6 +15,11 @@ if [ "$MODE" = "pull" ]; then
   COMPOSE_FILE="docker-compose.deploy.yml"
   BUILD_STEP="拉取预构建镜像"
   BUILD_CMD="docker compose -f $COMPOSE_FILE --env-file .env.production.local pull"
+
+  if [ -n "$GHCR_TOKEN" ]; then
+    echo "登录 GitHub Container Registry..."
+    echo "$GHCR_TOKEN" | docker login ghcr.io -u wxr007 --password-stdin
+  fi
 else
   COMPOSE_FILE="docker-compose.yml"
   BUILD_STEP="构建Docker镜像"
