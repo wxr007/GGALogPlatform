@@ -35,7 +35,7 @@ export function parseGGA(nmea: string): GGAPoint | null {
   const age = parseFloat(parts[13]);
   const station_id = parts[14];
 
-  if (utc_time === '' || isNaN(latitude) || isNaN(longitude) || quality === 0) {
+  if (utc_time === '' || isNaN(latitude) || isNaN(longitude)) {
     return null;
   }
 
@@ -79,6 +79,7 @@ export function parseGGAData(content: string): GGAPoint[] {
 
 export function getQualityColor(quality: number): string {
   switch (quality) {
+    case 0: return '#bfbfbf';   // 无效定位 - 浅灰
     case 1: return '#ff4d4f';   // 单点定位 - 红色
     case 2: return '#722ed1';   // 差分定位 - 紫色
     case 4: return '#52c41a';   // RTK固定解 - 绿色
@@ -90,6 +91,7 @@ export function getQualityColor(quality: number): string {
 
 export function getQualityLabel(quality: number): string {
   switch (quality) {
+    case 0: return '无效定位';
     case 1: return '单点定位';
     case 2: return '差分定位';
     case 4: return 'RTK固定解';
