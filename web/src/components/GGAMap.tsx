@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, LayersControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { Card, Tag, Space, Statistic, Row, Col } from 'antd';
+import { Card, Tag, Space, Statistic, Row, Col, Select } from 'antd';
 import { GGAPoint, getQualityColor, getQualityLabel } from '../utils/nmea';
 import { tileProviders, defaultTileIndex } from '../config/map';
 
@@ -43,6 +43,7 @@ function InvalidateSize() {
   }, [map]);
   return null;
 }
+
 function FitBounds({ points }: { points: GGAPoint[] }) {
   const map = useMap();
   useEffect(() => {
@@ -56,7 +57,6 @@ function FitBounds({ points }: { points: GGAPoint[] }) {
   return null;
 }
 
-// 如果只有一个点设置中心
 function SetCenter({ points }: { points: GGAPoint[] }) {
   const map = useMap();
   useEffect(() => {
@@ -69,6 +69,9 @@ function SetCenter({ points }: { points: GGAPoint[] }) {
 
 const GGAMap = ({ points }: GGAMapProps) => {
   const [selectedPoint, setSelectedPoint] = useState<GGAPoint | null>(null);
+  const [tileIndex, setTileIndex] = useState(defaultTileIndex);
+
+  const currentProvider = tileProviders[tileIndex];
 
   const center: [number, number] = useMemo(() => {
     if (points.length === 1) {
@@ -77,7 +80,6 @@ const GGAMap = ({ points }: GGAMapProps) => {
     return [34.0, 108.0];
   }, [points]);
 
-  // 按质量统计
   const qualityStats = useMemo(() => {
     const stats: Record<number, number> = {};
     points.forEach(p => {
@@ -86,7 +88,6 @@ const GGAMap = ({ points }: GGAMapProps) => {
     return stats;
   }, [points]);
 
-  // 轨迹线
   const trackLine: [number, number][] = useMemo(
     () => points.map(p => [p.latitude, p.longitude]),
     [points]
@@ -97,6 +98,13 @@ const GGAMap = ({ points }: GGAMapProps) => {
       title="轨迹地图"
       extra={
         <Space>
+          <Select
+            value={tileIndex}
+            onChange={setTileIndex}
+            style={{ width: 130 }}
+            size="small"
+            options={tileProviders.map((p, i) => ({ label: p.name, value: i }))}
+          />
           总点数: <Tag color="blue">{points.length}</Tag>
         </Space>
       }
@@ -116,7 +124,6 @@ const GGAMap = ({ points }: GGAMapProps) => {
         </Row>
       )}
 
-      {/* 地图容器 - 始终显示 */}
       <div style={{ height: '500px', borderRadius: 8, overflow: 'hidden' }}>
         <MapContainer
           center={center}
@@ -125,26 +132,16 @@ const GGAMap = ({ points }: GGAMapProps) => {
           scrollWheelZoom={true}
         >
           <InvalidateSize />
-          <LayersControl position="topright">
-            {tileProviders.map((provider, index) => (
-              <LayersControl.BaseLayer
-                key={provider.name}
-                name={provider.name}
-                checked={index === defaultTileIndex}
-              >
-                <TileLayer
-                  attribution={provider.attribution}
-                  url={provider.url}
-                  subdomains={provider.subdomains?.length ? provider.subdomains : undefined}
-                />
-              </LayersControl.BaseLayer>
-            ))}
-          </LayersControl>
+          <TileLayer
+            key={currentProvider.url}
+            attribution={currentProvider.attribution}
+            url={currentProvider.url}
+            subdomains={currentProvider.subdomains?.length ? currentProvider.subdomains : undefined}
+          />
 
           <FitBounds points={points} />
           <SetCenter points={points} />
 
-          {/* 轨迹线 */}
           {trackLine.length > 1 && (
             <Polyline
               positions={trackLine}
@@ -152,7 +149,6 @@ const GGAMap = ({ points }: GGAMapProps) => {
             />
           )}
 
-          {/* 标记点 */}
           {points.map((point, index) => (
             <Marker
               key={index}
@@ -183,14 +179,12 @@ const GGAMap = ({ points }: GGAMapProps) => {
         </MapContainer>
       </div>
 
-      {/* 无数据提示显示在地图下方 */}
       {points.length === 0 && (
         <div style={{ textAlign: 'center', padding: '12px 0 0', color: '#999' }}>
           未能解析到有效的 GGA 数据点
         </div>
       )}
 
-      {/* 选中点详情 */}
       {selectedPoint && (
         <Card
           size="small"
