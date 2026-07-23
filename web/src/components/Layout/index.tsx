@@ -58,6 +58,17 @@ const Layout = () => {
           items={menuItems}
           onClick={({ key }) => navigate(key)}
         />
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          width: '100%',
+          padding: '12px 16px',
+          color: 'rgba(255,255,255,0.45)',
+          fontSize: 12,
+          textAlign: 'center'
+        }}>
+          Build: {__BUILD_TIME__}
+        </div>
       </Sider>
       <AntLayout>
         <Header style={{ padding: '0 24px', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
