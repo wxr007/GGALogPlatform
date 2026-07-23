@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Card, Tag, Space, Statistic, Row, Col, Select } from 'antd';
@@ -19,23 +19,46 @@ interface GGAMapProps {
   points: GGAPoint[];
 }
 
-// 底图切换控制器
+// 底图切换控制器 - 用 useRef 追踪当前图层，先收集再移除，避免迭代中修改导致崩溃
 function TileController({ tileIndex }: { tileIndex: number }) {
   const map = useMap();
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+
   useEffect(() => {
     const provider = tileProviders[tileIndex];
-    // 移除所有已有的 TileLayer
-    map.eachLayer((layer) => {
-      if (layer instanceof L.TileLayer) {
-        map.removeLayer(layer);
+    if (!provider) return;
+
+    try {
+      // 先收集已有的 TileLayer，再移除（避免 eachLayer 迭代中修改导致错误）
+      const layersToRemove: L.TileLayer[] = [];
+      map.eachLayer((layer) => {
+        if (layer instanceof L.TileLayer) {
+          layersToRemove.push(layer);
+        }
+      });
+      layersToRemove.forEach((layer) => map.removeLayer(layer));
+      tileLayerRef.current = null;
+
+      // 创建新 TileLayer
+      const tileLayer = L.tileLayer(provider.url, {
+        attribution: provider.attribution,
+        ...(provider.subdomains?.length ? { subdomains: provider.subdomains } : {}),
+      }).addTo(map);
+      tileLayerRef.current = tileLayer;
+    } catch (e) {
+      console.error('切换底图失败:', e);
+    }
+
+    return () => {
+      if (tileLayerRef.current) {
+        try {
+          map.removeLayer(tileLayerRef.current);
+        } catch (_) {}
+        tileLayerRef.current = null;
       }
-    });
-    // 添加新 TileLayer
-    L.tileLayer(provider.url, {
-      attribution: provider.attribution,
-      ...(provider.subdomains?.length ? { subdomains: provider.subdomains } : {}),
-    }).addTo(map);
+    };
   }, [map, tileIndex]);
+
   return null;
 }
 
