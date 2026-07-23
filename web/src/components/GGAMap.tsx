@@ -93,14 +93,8 @@ const GGAMap = ({ points }: GGAMapProps) => {
         </Space>
       }
     >
-      {points.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
-          未能解析到有效的 GGA 数据点
-        </div>
-      ) : (
-        <>
-          {/* 质量统计 */}
-          {Object.keys(qualityStats).length > 0 && (
+      {/* 质量统计 */}
+      {Object.keys(qualityStats).length > 0 && (
         <Row gutter={16} style={{ marginBottom: 16 }}>
           {Object.entries(qualityStats).map(([q, count]) => (
             <Col key={q}>
@@ -114,6 +108,7 @@ const GGAMap = ({ points }: GGAMapProps) => {
         </Row>
       )}
 
+      {/* 地图容器 - 始终显示 */}
       <div style={{ height: 500, borderRadius: 8, overflow: 'hidden' }}>
         <MapContainer
           center={center}
@@ -168,6 +163,13 @@ const GGAMap = ({ points }: GGAMapProps) => {
         </MapContainer>
       </div>
 
+      {/* 无数据提示显示在地图下方 */}
+      {points.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '12px 0 0', color: '#999' }}>
+          未能解析到有效的 GGA 数据点
+        </div>
+      )}
+
       {/* 选中点详情 */}
       {selectedPoint && (
         <Card
@@ -193,8 +195,6 @@ const GGAMap = ({ points }: GGAMapProps) => {
             <Col span={6}><b>HDOP:</b> {selectedPoint.hdop.toFixed(2)}</Col>
           </Row>
         </Card>
-      )}
-        </>
       )}
     </Card>
   );
