@@ -34,7 +34,14 @@ function createCircleIcon(color: string): L.DivIcon {
   });
 }
 
-// 自动缩放到包含所有点
+// 强制地图重新计算尺寸
+function InvalidateSize() {
+  const map = useMap();
+  useEffect(() => {
+    setTimeout(() => map.invalidateSize(), 100);
+  }, [map]);
+  return null;
+}
 function FitBounds({ points }: { points: GGAPoint[] }) {
   const map = useMap();
   useEffect(() => {
@@ -109,13 +116,14 @@ const GGAMap = ({ points }: GGAMapProps) => {
       )}
 
       {/* 地图容器 - 始终显示 */}
-      <div style={{ height: 500, borderRadius: 8, overflow: 'hidden' }}>
+      <div style={{ height: '500px', borderRadius: 8, overflow: 'hidden' }}>
         <MapContainer
           center={center}
           zoom={5}
           style={{ height: '100%', width: '100%' }}
           scrollWheelZoom={true}
         >
+          <InvalidateSize />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
