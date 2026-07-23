@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, LayersControl } from 'react-leaflet';
 import L from 'leaflet';
 import { Card, Tag, Space, Statistic, Row, Col } from 'antd';
 import { GGAPoint, getQualityColor, getQualityLabel } from '../utils/nmea';
+import { tileProviders, defaultTileIndex } from '../config/map';
 
 import 'leaflet/dist/leaflet.css';
 
@@ -124,10 +125,21 @@ const GGAMap = ({ points }: GGAMapProps) => {
           scrollWheelZoom={true}
         >
           <InvalidateSize />
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <LayersControl position="topright">
+            {tileProviders.map((provider, index) => (
+              <LayersControl.BaseLayer
+                key={provider.name}
+                name={provider.name}
+                checked={index === defaultTileIndex}
+              >
+                <TileLayer
+                  attribution={provider.attribution}
+                  url={provider.url}
+                  subdomains={provider.subdomains?.length ? provider.subdomains : undefined}
+                />
+              </LayersControl.BaseLayer>
+            ))}
+          </LayersControl>
 
           <FitBounds points={points} />
           <SetCenter points={points} />
