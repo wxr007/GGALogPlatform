@@ -89,6 +89,10 @@ const AdminDatasetDetail = () => {
         返回
       </Button>
 
+      {dataset.fileType === 'RawRover' && (
+        <GGAMap points={ggaPoints} />
+      )}
+
       <Card title="数据详情（管理员视图）" extra={
         <Button type="primary" icon={<DownloadOutlined />} onClick={handleDownload}>
           下载文件
@@ -118,12 +122,6 @@ const AdminDatasetDetail = () => {
           <Descriptions.Item label="设备型号">{dataset.deviceInfo?.model || '-'}</Descriptions.Item>
         </Descriptions>
       </Card>
-
-      {dataset.fileType === 'RawRover' && (
-        <div style={{ marginTop: 16 }}>
-          <GGAMap points={ggaPoints} />
-        </div>
-      )}
 
       <Card title="数据预览" style={{ marginTop: 16 }}>
         <Input.TextArea
