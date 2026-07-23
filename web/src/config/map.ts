@@ -20,22 +20,22 @@ export const tileProviders: TileProvider[] = [
   },
   {
     name: 'Google 街道',
-    url: 'https://www.google.cn/maps/vt?lyrs=m@189&gl=cn&x={x}&y={y}&z={z}',
-    attribution: '&copy; <a href="https://www.google.cn/maps">Google</a>',
+    url: 'https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+    attribution: '&copy; Google',
   },
   {
     name: 'Google 卫星',
-    url: 'https://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}',
-    attribution: '&copy; <a href="https://www.google.cn/maps">Google</a>',
+    url: 'https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+    attribution: '&copy; Google',
   },
   {
     name: 'Google 混合',
-    url: 'https://www.google.cn/maps/vt?lyrs=s,h@189&gl=cn&x={x}&y={y}&z={z}',
-    attribution: '&copy; <a href="https://www.google.cn/maps">Google</a>',
+    url: 'https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+    attribution: '&copy; Google',
   },
   {
     name: 'OpenStreetMap',
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   },
 ];
