@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Card, Descriptions, Button, Spin, message, Input, Select } from 'antd'
 import { ArrowLeftOutlined, DownloadOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { adminService } from '../services/admin.service'
+import { parseGGAData } from '../utils/nmea'
+import GGAMap from '../components/GGAMap'
 
 const AdminDatasetDetail = () => {
   const { id } = useParams<{ id: string }>()
@@ -11,6 +13,13 @@ const AdminDatasetDetail = () => {
   const [loading, setLoading] = useState(true)
   const [dataset, setDataset] = useState<any>(null)
   const [updatingType, setUpdatingType] = useState(false)
+
+  const ggaPoints = useMemo(() => {
+    if (dataset?.preview && dataset?.fileType === 'RawRover') {
+      return parseGGAData(dataset.preview)
+    }
+    return []
+  }, [dataset])
 
   useEffect(() => {
     loadDataset()
@@ -109,6 +118,12 @@ const AdminDatasetDetail = () => {
           <Descriptions.Item label="设备型号">{dataset.deviceInfo?.model || '-'}</Descriptions.Item>
         </Descriptions>
       </Card>
+
+      {dataset.fileType === 'RawRover' && ggaPoints.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <GGAMap points={ggaPoints} />
+        </div>
+      )}
 
       <Card title="数据预览" style={{ marginTop: 16 }}>
         <Input.TextArea

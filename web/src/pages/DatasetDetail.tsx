@@ -1,15 +1,31 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Card, Descriptions, Button, Spin, message, Input } from 'antd'
+import { Card, Descriptions, Button, Spin, message, Input, Tag } from 'antd'
 import { ArrowLeftOutlined, DownloadOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { dataService } from '../services/data.service'
+import { parseGGAData } from '../utils/nmea'
+import GGAMap from '../components/GGAMap'
 
 const DatasetDetail = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [dataset, setDataset] = useState<any>(null)
+
+  const fileTypeColors: Record<string, string> = {
+    RawRover: 'blue',
+    RawBase: 'green',
+    LogRover: 'orange',
+    LogBase: 'purple'
+  }
+
+  const ggaPoints = useMemo(() => {
+    if (dataset?.preview && dataset?.fileType === 'RawRover') {
+      return parseGGAData(dataset.preview)
+    }
+    return []
+  }, [dataset])
 
   useEffect(() => {
     loadDataset()
@@ -75,11 +91,20 @@ const DatasetDetail = () => {
           <Descriptions.Item label="文件大小">{formatSize(dataset.fileSize)}</Descriptions.Item>
           <Descriptions.Item label="数据时间">{dayjs(dataset.date).format('YYYY-MM-DD HH:mm:ss')}</Descriptions.Item>
           <Descriptions.Item label="记录数">{dataset.recordCount}</Descriptions.Item>
+          <Descriptions.Item label="文件类型">
+            <Tag color={fileTypeColors[dataset.fileType] || 'default'}>{dataset.fileType}</Tag>
+          </Descriptions.Item>
           <Descriptions.Item label="上传时间">{dayjs(dataset.uploadTime).format('YYYY-MM-DD HH:mm:ss')}</Descriptions.Item>
           <Descriptions.Item label="设备ID">{dataset.deviceInfo?.deviceId || '-'}</Descriptions.Item>
           <Descriptions.Item label="设备型号">{dataset.deviceInfo?.model || '-'}</Descriptions.Item>
         </Descriptions>
       </Card>
+
+      {dataset.fileType === 'RawRover' && ggaPoints.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <GGAMap points={ggaPoints} />
+        </div>
+      )}
 
       <Card title="数据预览" style={{ marginTop: 16 }}>
         <Input.TextArea
