@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Card, Tag, Space, Statistic, Row, Col, Select } from 'antd';
 import { GGAPoint, getQualityColor, getQualityLabel } from '../utils/nmea';
@@ -17,6 +17,26 @@ L.Icon.Default.mergeOptions({
 
 interface GGAMapProps {
   points: GGAPoint[];
+}
+
+// 底图切换控制器
+function TileController({ tileIndex }: { tileIndex: number }) {
+  const map = useMap();
+  useEffect(() => {
+    const provider = tileProviders[tileIndex];
+    // 移除所有已有的 TileLayer
+    map.eachLayer((layer) => {
+      if (layer instanceof L.TileLayer) {
+        map.removeLayer(layer);
+      }
+    });
+    // 添加新 TileLayer
+    L.tileLayer(provider.url, {
+      attribution: provider.attribution,
+      ...(provider.subdomains?.length ? { subdomains: provider.subdomains } : {}),
+    }).addTo(map);
+  }, [map, tileIndex]);
+  return null;
 }
 
 // 创建带颜色的圆形图标
@@ -70,8 +90,6 @@ function SetCenter({ points }: { points: GGAPoint[] }) {
 const GGAMap = ({ points }: GGAMapProps) => {
   const [selectedPoint, setSelectedPoint] = useState<GGAPoint | null>(null);
   const [tileIndex, setTileIndex] = useState(defaultTileIndex);
-
-  const currentProvider = tileProviders[tileIndex];
 
   const center: [number, number] = useMemo(() => {
     if (points.length === 1) {
@@ -132,12 +150,7 @@ const GGAMap = ({ points }: GGAMapProps) => {
           scrollWheelZoom={true}
         >
           <InvalidateSize />
-          <TileLayer
-            key={currentProvider.url}
-            attribution={currentProvider.attribution}
-            url={currentProvider.url}
-            subdomains={currentProvider.subdomains?.length ? currentProvider.subdomains : undefined}
-          />
+          <TileController tileIndex={tileIndex} />
 
           <FitBounds points={points} />
           <SetCenter points={points} />
