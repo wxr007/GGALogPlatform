@@ -19,10 +19,24 @@ export const tileProviders: TileProvider[] = [
     subdomains: ['1', '2', '3', '4'],
   },
   {
+    name: 'Google 街道',
+    url: 'https://www.google.cn/maps/vt?lyrs=m@189&gl=cn&x={x}&y={y}&z={z}',
+    attribution: '&copy; <a href="https://www.google.cn/maps">Google</a>',
+  },
+  {
+    name: 'Google 卫星',
+    url: 'https://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}',
+    attribution: '&copy; <a href="https://www.google.cn/maps">Google</a>',
+  },
+  {
+    name: 'Google 混合',
+    url: 'https://www.google.cn/maps/vt?lyrs=s,h@189&gl=cn&x={x}&y={y}&z={z}',
+    attribution: '&copy; <a href="https://www.google.cn/maps">Google</a>',
+  },
+  {
     name: 'OpenStreetMap',
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    subdomains: [],
   },
 ];
 
