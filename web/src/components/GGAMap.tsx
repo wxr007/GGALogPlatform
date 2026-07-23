@@ -3,6 +3,7 @@ import { MapContainer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Card, Tag, Space, Statistic, Row, Col, Select } from 'antd';
 import { GGAPoint, getQualityColor, getQualityLabel } from '../utils/nmea';
+import { wgs84ToGcj02 } from '../utils/coordinate';
 import { tileProviders, defaultTileIndex } from '../config/map';
 
 import 'leaflet/dist/leaflet.css';
@@ -69,7 +70,7 @@ function createCircleIcon(color: string): L.DivIcon {
     html: `<div style="
       width: 12px; height: 12px;
       background: ${color};
-      border: 2px solid #fff;
+      border: 1px solid rgba(255,255,255,0.5);
       border-radius: 50%;
       box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     "></div>`,
@@ -87,26 +88,24 @@ function InvalidateSize() {
   return null;
 }
 
-function FitBounds({ points }: { points: GGAPoint[] }) {
+function FitBounds({ positions }: { positions: [number, number][] }) {
   const map = useMap();
   useEffect(() => {
-    if (points.length > 0) {
-      const bounds = L.latLngBounds(
-        points.map(p => [p.latitude, p.longitude] as [number, number])
-      );
+    if (positions.length > 0) {
+      const bounds = L.latLngBounds(positions);
       map.fitBounds(bounds, { padding: [50, 50] });
     }
-  }, [points, map]);
+  }, [positions, map]);
   return null;
 }
 
-function SetCenter({ points }: { points: GGAPoint[] }) {
+function SetCenter({ positions }: { positions: [number, number][] }) {
   const map = useMap();
   useEffect(() => {
-    if (points.length === 1) {
-      map.setView([points[0].latitude, points[0].longitude], 16);
+    if (positions.length === 1) {
+      map.setView(positions[0], 16);
     }
-  }, [points, map]);
+  }, [positions, map]);
   return null;
 }
 
@@ -114,12 +113,14 @@ const GGAMap = ({ points }: GGAMapProps) => {
   const [selectedPoint, setSelectedPoint] = useState<GGAPoint | null>(null);
   const [tileIndex, setTileIndex] = useState(defaultTileIndex);
 
+  const needOffset = tileProviders[tileIndex]?.offset ?? false;
+
   const center: [number, number] = useMemo(() => {
     if (points.length === 1) {
-      return [points[0].latitude, points[0].longitude];
+      return wgs84ToGcj02([points[0].latitude, points[0].longitude], needOffset);
     }
     return [34.0, 108.0];
-  }, [points]);
+  }, [points, needOffset]);
 
   const qualityStats = useMemo(() => {
     const stats: Record<number, number> = {};
@@ -130,8 +131,8 @@ const GGAMap = ({ points }: GGAMapProps) => {
   }, [points]);
 
   const trackLine: [number, number][] = useMemo(
-    () => points.map(p => [p.latitude, p.longitude]),
-    [points]
+    () => points.map(p => wgs84ToGcj02([p.latitude, p.longitude], needOffset)),
+    [points, needOffset]
   );
 
   return (
@@ -175,8 +176,8 @@ const GGAMap = ({ points }: GGAMapProps) => {
           <InvalidateSize />
           <TileController tileIndex={tileIndex} />
 
-          <FitBounds points={points} />
-          <SetCenter points={points} />
+          <FitBounds positions={trackLine} />
+          <SetCenter positions={trackLine} />
 
           {trackLine.length > 1 && (
             <Polyline
@@ -185,10 +186,12 @@ const GGAMap = ({ points }: GGAMapProps) => {
             />
           )}
 
-          {points.map((point, index) => (
+          {points.map((point, index) => {
+            const pos = wgs84ToGcj02([point.latitude, point.longitude], needOffset);
+            return (
             <Marker
               key={index}
-              position={[point.latitude, point.longitude]}
+              position={pos}
               icon={createCircleIcon(getQualityColor(point.quality))}
               eventHandlers={{
                 click: () => setSelectedPoint(point),
@@ -211,7 +214,8 @@ const GGAMap = ({ points }: GGAMapProps) => {
                 </div>
               </Popup>
             </Marker>
-          ))}
+            );
+          })}
         </MapContainer>
       </div>
 
