@@ -93,8 +93,14 @@ const GGAMap = ({ points }: GGAMapProps) => {
         </Space>
       }
     >
-      {/* 质量统计 */}
-      {Object.keys(qualityStats).length > 0 && (
+      {points.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
+          未能解析到有效的 GGA 数据点
+        </div>
+      ) : (
+        <>
+          {/* 质量统计 */}
+          {Object.keys(qualityStats).length > 0 && (
         <Row gutter={16} style={{ marginBottom: 16 }}>
           {Object.entries(qualityStats).map(([q, count]) => (
             <Col key={q}>
@@ -187,6 +193,8 @@ const GGAMap = ({ points }: GGAMapProps) => {
             <Col span={6}><b>HDOP:</b> {selectedPoint.hdop.toFixed(2)}</Col>
           </Row>
         </Card>
+      )}
+        </>
       )}
     </Card>
   );

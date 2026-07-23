@@ -22,7 +22,9 @@ const DatasetDetail = () => {
 
   const ggaPoints = useMemo(() => {
     if (dataset?.preview && dataset?.fileType === 'RawRover') {
-      return parseGGAData(dataset.preview)
+      const points = parseGGAData(dataset.preview)
+      console.log('GGA解析结果:', points.length, '个点, 预览前100字符:', dataset.preview.slice(0, 100))
+      return points
     }
     return []
   }, [dataset])
@@ -100,7 +102,7 @@ const DatasetDetail = () => {
         </Descriptions>
       </Card>
 
-      {dataset.fileType === 'RawRover' && ggaPoints.length > 0 && (
+      {dataset.fileType === 'RawRover' && (
         <div style={{ marginTop: 16 }}>
           <GGAMap points={ggaPoints} />
         </div>
