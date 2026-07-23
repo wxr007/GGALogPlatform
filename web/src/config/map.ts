@@ -39,16 +39,7 @@ export const tileProviders: TileProvider[] = [
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     subdomains: ['a', 'b', 'c'],
   },
-  {
-    name: 'ArcGIS 街道',
-    url: 'https://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineCommunity/MapServer/tile/{z}/{y}/{x}',
-    attribution: '&copy; ArcGIS',
-  },
-  {
-    name: 'ArcGIS 卫星',
-    url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution: '&copy; ArcGIS',
-  },
+
 ];
 
 export const defaultTileIndex = 0; // 默认高德地图
