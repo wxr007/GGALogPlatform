@@ -27,7 +27,7 @@ export function parseGGA(nmea: string): GGAPoint | null {
   const lat_ns = parts[3];
   let longitude = parseFloat(parts[4]);
   const lon_ew = parts[5];
-  const quality = parseInt(parts[6]);
+  const quality = parseInt(parts[6]) || 0;
   const num_sats = parseInt(parts[7]);
   const hdop = parseFloat(parts[8]);
   const altitude = parseFloat(parts[9]);
@@ -82,10 +82,13 @@ export function getQualityColor(quality: number): string {
     case 0: return '#bfbfbf';   // 无效定位 - 浅灰
     case 1: return '#ff4d4f';   // 单点定位 - 红色
     case 2: return '#722ed1';   // 差分定位 - 紫色
+    case 3: return '#13c2c2';   // PPS定位 - 青色
     case 4: return '#52c41a';   // RTK固定解 - 绿色
     case 5: return '#fa8c16';   // RTK浮点解 - 橙色
     case 6: return '#1890ff';   // 惯导推算 - 蓝色
-    default: return '#8c8c8c';  // 其他 - 灰色
+    case 7: return '#eb2f96';   // 手动输入 - 粉红
+    case 8: return '#fadb14';   // 模拟模式 - 黄色
+    default: return '#8c8c8c';  // 未知 - 灰色
   }
 }
 
@@ -94,9 +97,12 @@ export function getQualityLabel(quality: number): string {
     case 0: return '无效定位';
     case 1: return '单点定位';
     case 2: return '差分定位';
+    case 3: return 'PPS定位';
     case 4: return 'RTK固定解';
     case 5: return 'RTK浮点解';
     case 6: return '惯导推算';
+    case 7: return '手动输入';
+    case 8: return '模拟模式';
     default: return '未知';
   }
 }
