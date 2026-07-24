@@ -62,18 +62,21 @@ export function parseGGA(nmea: string): GGAPoint | null {
 }
 
 export function parseGGAData(content: string): GGAPoint[] {
-  const lines = content.split('\n');
-  const points: GGAPoint[] = [];
+  // 先用 \n 和 \r 替换为换行，再用 $ 分隔语句（处理无换行的拼接情况）
+  const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const sentences = normalized
+    .split('$')
+    .map(s => s.trim())
+    .filter(s => s.includes('GGA'))
+    .map(s => '$' + s);
 
-  for (const line of lines) {
-    if (line.includes('GGA')) {
-      const point = parseGGA(line);
-      if (point) {
-        points.push(point);
-      }
+  const points: GGAPoint[] = [];
+  for (const sentence of sentences) {
+    const point = parseGGA(sentence);
+    if (point) {
+      points.push(point);
     }
   }
-
   return points;
 }
 
